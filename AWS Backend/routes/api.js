@@ -4,7 +4,7 @@ var mongodb = require('mongodb');
 
 var MongoClient = mongodb.MongoClient;
 
-var url = 'mongodb://seniorDesign:#SeniorDesign17@smartseatbeltsystem-shard-00-00-ns9nq.mongodb.net:27017,smartseatbeltsystem-shard-00-01-ns9nq.mongodb.net:27017,smartseatbeltsystem-shard-00-02-ns9nq.mongodb.net:27017/test?ssl=true&replicaSet=SmartSeatBeltSystem-shard-0&authSource=admin';
+var url = 'mongodb://HoneywellSeniorDesign:%23SeniorDesign17@smartseatbeltsystem-shard-00-00-opjbx.mongodb.net:27017,smartseatbeltsystem-shard-00-01-opjbx.mongodb.net:27017,smartseatbeltsystem-shard-00-02-opjbx.mongodb.net:27017/test?ssl=true&replicaSet=SmartSeatBeltSystem-shard-0&authSource=admin';
 
 function populateSeatData() {
 
