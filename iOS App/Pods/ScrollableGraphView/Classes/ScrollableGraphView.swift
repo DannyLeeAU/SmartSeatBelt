@@ -164,7 +164,7 @@ import UIKit
         self.viewportWidth = self.frame.width
         self.viewportHeight = self.frame.height
         
-        let viewport = CGRect(x: 0, y: 0, width: viewportWidth, height: viewportHeight - 100)
+        let viewport = CGRect(x: 0, y: 0, width: viewportWidth, height: viewportHeight)
         
         // 1.
         // Add the subviews we will use to draw everything.
@@ -175,9 +175,8 @@ import UIKit
         self.addSubview(drawingView)
         
         // Add the x-axis labels view.
-        labelsView = UIView(frame: CGRect(x: 0, y: 0, width: self.frame.width, height: 200))
         self.insertSubview(labelsView, aboveSubview: drawingView)
-
+        
         // 2.
         // Calculate the total size of the graph, need to know this for the scrollview.
         
@@ -811,10 +810,7 @@ import UIKit
             
             label.text = (dataSource?.label(atIndex: point) ?? "")
             label.textColor = ref.dataPointLabelColor
-            label.font = UIFont(name: "SanFranciscoDisplay-Regular", size: 5.0)//ref.dataPointLabelFont
-            label.numberOfLines = 1
-            label.adjustsFontSizeToFitWidth = true
-            label.transform = CGAffineTransform(rotationAngle: CGFloat.pi / 15)
+            label.font = ref.dataPointLabelFont
             
             label.sizeToFit()
             
@@ -823,16 +819,11 @@ import UIKit
             let rangeMin = (shouldAdaptRange) ? self.range.min : self.rangeMin
             let position = calculatePosition(atIndex: point, value: rangeMin)
             
-            //position.x - label.frame.width / 2
-            
-//            label.frame = CGRect(origin: CGPoint(x: position.x - label.frame.width / 2, y: position.y + ref.dataPointLabelTopMargin), size: label.frame.size)
-            
-            label.frame = CGRect(x: position.x, y: position.y, width: label.frame.size.width, height: label.frame.size.height)
+            label.frame = CGRect(origin: CGPoint(x: position.x - label.frame.width / 2, y: position.y + ref.dataPointLabelTopMargin), size: label.frame.size)
             
             let _ = labelsView.subviews.filter { $0.frame == label.frame }.map { $0.removeFromSuperview() }
             
             labelsView.addSubview(label)
-            
         }
     }
     
@@ -1003,7 +994,6 @@ public extension ScrollableGraphView : ScrollableGraphViewDataSource {
     }
     
     public func label(atIndex pointIndex: Int) -> String {
-        
         return "\(pointIndex)"
     }
     
