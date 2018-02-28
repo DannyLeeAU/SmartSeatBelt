@@ -4,11 +4,7 @@ var mongodb = require('mongodb');
 
 var MongoClient = mongodb.MongoClient;
 
-var url = 'mongodb://HoneywellSeniorDesign:%23SeniorDesign17@' +
-    'smartseatbeltsystem-shard-00-00-opjbx.mongodb.net:27017,' +
-    'smartseatbeltsystem-shard-00-01-opjbx.mongodb.net:27017,' +
-    'smartseatbeltsystem-shard-00-02-opjbx.mongodb.net:27017' +
-    '/test?ssl=true&replicaSet=SmartSeatBeltSystem-shard-0&authSource=admin';
+var url = process.env.MONGODB_URI;
 
 function populateSeatData() {
 
@@ -79,7 +75,6 @@ router.get('/setupSeats', function(req, res, next) {
 });
 
 /* Get Seats*/
-
 router.get('/getSeats', function(req, res, next) {
     MongoClient.connect(url, function(err, db){
         if(err) {
