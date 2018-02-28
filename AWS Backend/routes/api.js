@@ -9,6 +9,33 @@ var url = process.env.MONGODB_URI;
 function populateSeatData() {
 
 }
+
+function createSeat(position, buckled, proximity) {
+    seats.append({
+        "_id": position[i],
+        "buckled": buckled[i],
+        "proximity": proximity[i],
+    });
+}
+
+function createSensorArray(position, timestamp, buckled, proximity) {
+    sensors.append({
+        "_id": position[i],
+        "buckled": [
+            {
+                "time": timestamp,
+                "value": buckled[i]
+            }
+        ],
+        "proximity": [
+            {
+                "time": timestamp,
+                "value": proximity[i]
+            }
+        ]
+    });
+}
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
     res.render('index', { title: 'Smart Seat/Belt System API' });
@@ -17,19 +44,23 @@ router.get('/', function(req, res, next) {
 /* Setup Seats */
 router.get('/setupSeats', function(req, res, next) {
     MongoClient.connect(url, function(err, db){
-       if(err) {
-           console.log('Unable to connect to db');
+        if(err) {
+            console.log('Unable to connect to db');
        } else {
            console.log('Connected to database');
 
-           var collection = db.collection('Seats');
+           var seat_collection = db.collection('Seats');
+           var sensor_collection = db.collection('Sensors');
 
-          collection.remove({});
+           seat_collection.remove({});
+           sensor_collection.remove({});
 
-           var seats = {};
+           var seats = [];
+           var sensors = [];
            var proximity = [];
            var buckled = [];
            var seatNames = [];
+           var timestamp = new Date().getTime() / 1000;
 
            for (var i = 1; i < 7; i++) {
                seatNames.push(i + "A");
@@ -53,16 +84,13 @@ router.get('/setupSeats', function(req, res, next) {
            }
 
            for (var i = 0; i < seatNames.length; i++) {
-                seats[seatNames[i]] = {
-                    "buckled": buckled[i],
-                    "proximity": proximity[i],
-                    "Timestamp": new Date().getTime() / 1000
-                }
+                createSeat(seatNames, buckled, proximity);
+                createSensorArray(seatNames, timestamp, buckled, proximity);
            }
 
            console.log(seatNames);
 
-           collection.insert(seats, function(err, result) {
+           seat_collection.insertMany(seats, function(err, result) {
                if(err) {
                    console.log(err);
                } else {
