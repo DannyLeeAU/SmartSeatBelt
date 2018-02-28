@@ -1,17 +1,14 @@
-'''
-sim.py
+"""sim.py - Generates buckled and proximity data for Smart Seat/Belt system.
 
-Author: Jarad Gray
-Date: 6 December 2017
+Authors: Jarad Gray, Daniel Thompson
+Date: 27 February 2018
 
-This is the simulator that generates buckled and proximity data for the Honeywell
-Connected Aircraft Seat/Belt system.
+Generates buckled and proximity data for the Honeywell Connected Aircraft
+Seat/Belt system. Saves simulated data into a MongoDB database.
 
-Saves simulated data into a MongoDB database.
-
-Require pymongo module. Install it with pip via:
-python -m pip install pymongo
-'''
+Requires pymongo module. Install it with pip via:
+    `python -m pip install pymongo`
+"""
 
 import pymongo
 import json
@@ -23,31 +20,36 @@ import time
 "Constants" and Variables
 '''
 
-uri = 'mongodb://HoneywellSeniorDesign:%23SeniorDesign17@smartseatbeltsystem-shard-00-00-opjbx.mongodb.net:27017,smartseatbeltsystem-shard-00-01-opjbx.mongodb.net:27017,smartseatbeltsystem-shard-00-02-opjbx.mongodb.net:27017/test?ssl=true&replicaSet=SmartSeatBeltSystem-shard-0&authSource=admin'
+uri = 'mongodb://HoneywellSeniorDesign:%23SeniorDesign17@' \
+      'smartseatbeltsystem-shard-00-00-opjbx.mongodb.net:27017,' \
+      'smartseatbeltsystem-shard-00-01-opjbx.mongodb.net:27017,' \
+      'smartseatbeltsystem-shard-00-02-opjbx.mongodb.net:27017' \
+      '/test?ssl=true&replicaSet=SmartSeatBeltSystem-shard-0&authSource=admin'
 
 # "Constants"
-MAX_UNBUCKLED = 15;
-MIN_UNBUCKLED = 4;
-MAX_EMPTY = 6;
-MIN_EMPTY = 0;
-PROB_UNBUCKLED = 10;   # 1 in 50 chance
-PROB_BUCKLED = 2;     # 1 in 50 chance
-PROB_UNOCCUPIED = 50;  # 1 in 50 chance
-PROB_OCCUPIED = 10;    # 1 in 50 chance
+MAX_UNBUCKLED = 15
+MIN_UNBUCKLED = 4
+MAX_EMPTY = 6
+MIN_EMPTY = 0
+PROB_UNBUCKLED = 10  # 1 in 50 chance
+PROB_BUCKLED = 2  # 1 in 50 chance
+PROB_UNOCCUPIED = 50  # 1 in 50 chance
+PROB_OCCUPIED = 10  # 1 in 50 chance
 
 # Variables
 seats = []
-seatData = {}
-buckledData = []
-proximityData = []
-updatedSeatIndexes = []
+seat_data = {}
+buckled_data = []
+proximity_data = []
+updated_seat_indexes = []
 
 
 '''
 Function Definitions
 '''
 
-def initialize():    
+
+def initialize():
     # populate seats list
     for i in range(1, 7):
         seats.append(str(i) + 'A')
@@ -62,168 +64,168 @@ def initialize():
         seats.append(str(i) + 'E')
         seats.append(str(i) + 'F')
 
-    # initialize buckledData list
+    # initialize buckled_data list
     for i in range(len(seats)):
-        buckledData.append(True)
+        buckled_data.append(True)
 
-    # initialize proximityData list
+    # initialize proximity_data list
     for i in range(len(seats)):
-        proximityData.append(True)
+        proximity_data.append(True)
 
-    # populate seatData object with blank lists
+    # populate seat_data object with blank lists
     for i in range(len(seats)):
-        seatData[seats[i]] = []
+        seat_data[seats[i]] = []
 
 
-# Returns a random integer between min (inclusive) and max (inclusive)
-def getSeatIndexes(num, start, end):
+def get_seat_indexes(num, start, end):
+    """Returns a random integer between min (inclusive) and max (inclusive)."""
     indexes = []
 
     for i in range(num):
         index = random.randint(start, end)
-        while index in indexes: # filter duplicates
+        while index in indexes:  # filter duplicates
             index = random.randint(start, end)
         indexes.append(index)
 
     return indexes
 
 
-# Returns a list of size num containing integers between start (inclusive) and end (inclusive)
-# The returned list is guaranteed to contain no elements that are already in the proximityData array
-def getUnbuckledSeatIndexes(num, start, end):
+def get_unbuckled_seat_indexes(num, start, end):
+    """Returns a list of `num` integers between `start` and `end`.
+
+    The inputted range (start, end) is inclusive. The returned list is
+    guaranteed to contain no elements that are already in proximity_data[].
+    """
     indexes = []
 
     for i in range(num):
         index = random.randint(start, end)
-        while index in indexes: # filter duplicates
+        while index in indexes:  # filter duplicates
             index = random.randint(start, end)
         indexes.append(index)
 
     return indexes
 
 
-# Generates a set of random proximity data. Used when the simulator is first started up.
-# Alters proximityData[] and buckledData[]
-def simulateProximityData():
-    print 'simulateProximityData() called.'
+def simulate_proximity_data():
+    """Generates a set of random proximity data.
 
-    numEmpty = random.randint(MIN_EMPTY, MAX_EMPTY)
-    print 'Number of empty seats: ' + str(numEmpty)
-    
-    emptySeatsIndexes = getSeatIndexes(numEmpty, 0, len(seats) - 1) # array containing indexes of seats to mark empty
+    Alters proximity_data[] and buckled_data[].
+    """
+    print 'simulate_proximity_data() called.'
 
-    # mark each seat whose index is in emptySeatsIndexes[] as empty in proximityData[] and unbuckled in buckledData[]
-    for i in range(len(emptySeatsIndexes)):
-        proximityData[emptySeatsIndexes[i]] = False
-        buckledData[emptySeatsIndexes[i]] = False
+    num_empty = random.randint(MIN_EMPTY, MAX_EMPTY)
+    print 'Number of empty seats: ' + str(num_empty)
 
+    # array containing indexes of seats to mark empty
+    empty_seats_indexes = get_seat_indexes(num_empty, 0, len(seats) - 1)
 
-# Generates a set of random buckled data. Used when the simulator is first started up.
-# Alters buckledData[]
-def simulateBuckledData():
-    print 'simulateBuckledData() called.'
-
-    numUnbuckled = random.randint(MIN_UNBUCKLED, MAX_UNBUCKLED)
-    print 'Number of unbuckled seats: ' + str(numUnbuckled)
-    
-    unbuckledSeatsIndexes = getUnbuckledSeatIndexes(numUnbuckled, 0, len(seats) - 1) # array containing indexes of seats to mark unbuckled
-
-    # mark each seat whose index is in unbuckledSeatsIndexes[] as unbuckled in buckledData[]
-    for i in range(len(unbuckledSeatsIndexes)):
-        buckledData[unbuckledSeatsIndexes[i]] = False
+    # mark each seat's index in empty_seats_indexes[] as empty in proximity_data[] and unbuckled in buckled_data[]
+    for i in range(len(empty_seats_indexes)):
+        proximity_data[empty_seats_indexes[i]] = False
+        buckled_data[empty_seats_indexes[i]] = False
 
 
-# Updates proximityData[]. Used during the loop to simulate real-time data.
-def updateProximityData():
-    print 'updateProximityData() called.'
+def simulate_buckled_data():
+    """Generates a set of random buckled data into buckled_data[]."""
+    print 'simulate_buckled_data() called.'
+
+    num_unbuckled = random.randint(MIN_UNBUCKLED, MAX_UNBUCKLED)
+    print 'Number of unbuckled seats: ' + str(num_unbuckled)
+
+    # array containing indexes of seats to mark unbuckled
+    unbuckled_seats_indexes = get_unbuckled_seat_indexes(num_unbuckled, 0, len(seats) - 1)
+
+    # mark each seat whose index is in unbuckled_seats_indexes[] as unbuckled in buckled_data[]
+    for i in range(len(unbuckled_seats_indexes)):
+        buckled_data[unbuckled_seats_indexes[i]] = False
+
+
+def update_proximity_data():
+    """Updates proximity_data[]. Used during the loop to simulate real-time data."""
+    print 'update_proximity_data() called.'
 
     for i in range(len(seats)):
-        if proximityData[i] and not buckledData[i]: # if a seat is occupied and unbuckled
-            # roll to mark unoccupied
+        if proximity_data[i] and not buckled_data[i]:  # occupied and unbuckled
             if random.randint(0, PROB_UNOCCUPIED) == 0:
-                proximityData[i] = False
-                buckledData[i] = False
-                updatedSeatIndexes.append(i)
+                proximity_data[i] = False
+                buckled_data[i] = False
+                updated_seat_indexes.append(i)
             else:
-                # roll to mark buckled
                 if random.randint(0, PROB_BUCKLED) == 0:
-                    proximityData[i] = True
-                    buckledData[i] = True
-                    updatedSeatIndexes.append(i)
-        elif not proximityData[i]: # if a seat is unoccupied
-            # roll to mark occupied (& unbuckled)
+                    proximity_data[i] = True
+                    buckled_data[i] = True
+                    updated_seat_indexes.append(i)
+        elif not proximity_data[i]:  # unoccupied
             if random.randint(0, PROB_OCCUPIED) == 0:
-                proximityData[i] = True
-                buckledData[i] = False
-                updatedSeatIndexes.append(i)
+                proximity_data[i] = True
+                buckled_data[i] = False
+                updated_seat_indexes.append(i)
 
 
-# Updates buckledData[]. Used during th eloop to simulate real-time data.
-# Doesn't consider a seat that is unoccupied or has already been updated this turn
-def updateBuckledData():
-    print 'updateBuckledData() called.'
+def update_buckled_data():
+    """Updates buckled_data[].
+
+    Used during the loop to simulate real-time data. Doesn't consider a seat
+    that is unoccupied or has already been updated this turn.
+    """
+    print 'update_buckled_data() called.'
 
     for i in range(len(seats)):
-        if i not in updatedSeatIndexes: # make sure this seat hasn't already been updated
-            if buckledData[i] and proximityData[i]: # if a seat is buckled and occupied
-                # roll to mark unbuckled (& occupied)
+        if i not in updated_seat_indexes:  # not already updated
+            if buckled_data[i] and proximity_data[i]:  # buckled and occupied
                 if random.randint(0, PROB_UNBUCKLED) == 0:
-                    buckledData[i] = False
-                    proximityData[i] = True
-                    updatedSeatIndexes.append(i)
-            elif not buckledData[i] and proximityData[i]: # if a seat is unbuckled and occupied
-                # roll to mark buckled (& occupied)
+                    buckled_data[i] = False
+                    proximity_data[i] = True
+                    updated_seat_indexes.append(i)
+            elif not buckled_data[i] and proximity_data[i]:  # unbuckled and occupied
                 if random.randint(0, PROB_BUCKLED) == 0:
-                    buckledData[i] = True
-                    proximityData[i] = True
-                    updatedSeatIndexes.append(i)
-            elif not buckledData[i] and not proximityData[i]: # if a seat is unbuckled and unoccupied
-                # roll to mark occupied and unbuckled
+                    buckled_data[i] = True
+                    proximity_data[i] = True
+                    updated_seat_indexes.append(i)
+            elif not buckled_data[i] and not proximity_data[i]:  # unbuckled and unoccupied
                 if random.randint(0, PROB_OCCUPIED) == 0:
-                    buckledData[i] = False
-                    proximityData[i] = True
-                    updatedSeatIndexes.append(i)
+                    buckled_data[i] = False
+                    proximity_data[i] = True
+                    updated_seat_indexes.append(i)
 
 
-# populates seatData dictionary with propwerties having seat name as key and a dictionary as value, for each seat in seats[]
-def populateSeatData():
-    print 'populateSeatData() called.'
+def populate_seat_data():
+    """Populates seat_data dictionary for each seat in seats[]."""
+    print 'populate_seat_data() called.'
 
     for i in range(len(seats)):
-        toInsert = {'Timestamp': round(time.time(), 3),
-                    'isBuckled': buckledData[i],
-                    'inProximity': proximityData[i]}
-        seat = seatData[seats[i]]
-        seat.insert(0, toInsert)
-
+        to_insert = {'Timestamp': round(time.time(), 3),
+                     'isBuckled': buckled_data[i],
+                     'inProximity': proximity_data[i]}
+        seat = seat_data[seats[i]]
+        seat.insert(0, to_insert)
 
 
 '''
 MAIN Function
 '''
 
+
 def main():
-    # connect to mongodb
     try:
         client = pymongo.MongoClient(uri)
         print 'Connected Successfully!!!'
     except pymongo.errors.ConnectionFailure, e:
-        print 'Could not connect to MongoDB: %s' % e
+        print 'Could not connect to MongoDB: ', e
 
     db = client['test']
     collection = db['Seats']
 
-    # START LOOP
     for i in range(1000):
-        print 'Into the loop...'
-        populateSeatData()
-        
-        collection.drop()
-        collection.save(seatData)
+        populate_seat_data()
 
-        updatedSeatIndexes = []
-        updateProximityData()
-        updateBuckledData()
+        collection.drop()
+        collection.save(seat_data)
+
+        updated_seat_indexes = []
+        update_proximity_data()
+        update_buckled_data()
 
         '''
         # Stuff for debugging:
@@ -233,13 +235,15 @@ def main():
         '''
         time.sleep(7)
 
-    # END LOOP
 
 '''
 FUNCTION CALLS
 '''
-startTime = time.time()
-initialize()
-main()
-endTime = time.time()
-print 'Execution took ' + str(endTime - startTime) + ' seconds.'
+
+
+if __name__ == "__main__":
+    startTime = time.time()
+    initialize()
+    main()
+    endTime = time.time()
+    print 'Execution took ' + str(endTime - startTime) + ' seconds.'
