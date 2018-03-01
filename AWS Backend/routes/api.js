@@ -11,29 +11,29 @@ function populateSeatData() {
 }
 
 function createSeat(position, buckled, proximity) {
-    seats.append({
-        "_id": position[i],
-        "buckled": buckled[i],
-        "proximity": proximity[i],
-    });
+    return {
+        "_id": position,
+        "buckled": buckled,
+        "proximity": proximity
+    };
 }
 
 function createSensorArray(position, timestamp, buckled, proximity) {
-    sensors.append({
-        "_id": position[i],
+    return {
+        "_id": position,
         "buckled": [
             {
                 "time": timestamp,
-                "value": buckled[i]
+                "value": buckled
             }
         ],
         "proximity": [
             {
                 "time": timestamp,
-                "value": proximity[i]
+                "value": proximity
             }
         ]
-    });
+    };
 }
 
 /* GET home page. */
@@ -80,12 +80,16 @@ router.get('/setupSeats', function(req, res, next) {
 
            for (var i = 0; i < seatNames.length; i++) {
                proximity.push(!!Math.floor(Math.random() * 2));
-               buckled.push(!!Math.floor(Math.random() * 2));
+               if(proximity[i]) {
+                   buckled.push(!!Math.floor(Math.random() * 2));
+               } else {
+                   buckled.push(false);
+               }
            }
 
            for (var i = 0; i < seatNames.length; i++) {
-                createSeat(seatNames, buckled, proximity);
-                createSensorArray(seatNames, timestamp, buckled, proximity);
+                seats.push(createSeat(seatNames[i], buckled[i], proximity[i]));
+                sensors.push(createSensorArray(seatNames[i], timestamp, buckled[i], proximity[i]));
            }
 
            console.log(seatNames);
@@ -93,10 +97,13 @@ router.get('/setupSeats', function(req, res, next) {
            seat_collection.insertMany(seats, function(err, result) {
                if(err) {
                    console.log(err);
-               } else {
-                   res.redirect('getSeats')
                }
-               db.close();
+           });
+
+           sensor_collection.insertMany(sensors, function(err, result) {
+               if(err) {
+                   console.log(err);
+               }
            });
        }
     });
@@ -157,11 +164,11 @@ router.get('/getRecentSeats', function(req, res, next) {
                     }
 
                     mostRecentResult = {};
-                    result = JSON.stringify(result[0]);
+                    result = JSON.stringify(result);
                     resultDictionary = JSON.parse(result);
 
                     for(var i = 0; i < seatNames.length; i++) {
-                        name = seatNames[i];
+                        var name = seatNames[i];
                         historyArray = resultDictionary[name];
                         doesntmatter = historyArray[0];
                         mostRecentResult[name] = doesntmatter;
