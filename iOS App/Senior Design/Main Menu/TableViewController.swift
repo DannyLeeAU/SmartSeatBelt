@@ -119,6 +119,7 @@ class TableViewController: UITableViewController {
                     for (key, value) in jsonValue {
                         var fastenedBool = true
                         var inProximityBool = true
+                        var accelerometerNum = 0.0
                         for (key2, value2) in value.jsonDictionary! {
                             if key2 == "isBuckled" {
                                 fastenedBool = value2.boolValue
@@ -127,7 +128,8 @@ class TableViewController: UITableViewController {
                                 inProximityBool = value2.boolValue
                             }
                         }
-                        let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: Date())
+                        let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: Date(),
+                                                  accelerometer: accelerometerNum)
                         self.seatDict.updateValue(object, forKey: key)
                     }
                     

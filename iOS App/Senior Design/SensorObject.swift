@@ -21,4 +21,5 @@ struct SensorObject {
     let fastened: Bool
     let inProximity: Bool
     let timeStamp: Date
+    let accelerometer: Double
 }

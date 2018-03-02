@@ -91,6 +91,7 @@ class SeatHistory: UIViewController, ScrollableGraphViewDataSource {//LineChartD
                             var fastenedBool = true
                             var inProximityBool = true
                             var timeStamp = Date()
+                            var accelerometerNum = 0.0
                             let array = value.jsonArray ?? []
                             for dict in array {
                                 for (key2, value2) in dict.jsonDictionary! {
@@ -104,7 +105,7 @@ class SeatHistory: UIViewController, ScrollableGraphViewDataSource {//LineChartD
                                         timeStamp = Date(timeIntervalSince1970: epoch)
                                     }
                                 }
-                                let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: timeStamp)
+                                let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: timeStamp, accelerometer: accelerometerNum)
                                 self.sensorObjectsArray.append(object)
                             }
                             

@@ -37,6 +37,13 @@ class SeatHistoryCell: UITableViewCell {
         return $0
     }(UILabel())
     
+    let accelerometerLabel: UILabel = {
+        $0.textAlignment = .center
+        $0.numberOfLines = 1
+        $0.backgroundColor = UIColor(hexString: "DBEBF6")
+        return $0
+    }(UILabel())
+    
     /** Each cell gets reused (why we use dequeue reusable cell in SeatHistoryTable).
      You must reset all values once they roll off screen so that the next cell
      that reuses it doesn't have remnents of the previous cell.
@@ -51,25 +58,33 @@ class SeatHistoryCell: UITableViewCell {
         addSubview(timeLabel)
         addSubview(fastenedLabel)
         addSubview(proximityLabel)
+        addSubview(accelerometerLabel)
         
         timeLabel.snp.makeConstraints { (make) in
             make.top.bottom.equalToSuperview()
             make.left.equalToSuperview()
-            make.width.equalToSuperview().dividedBy(3)
+            make.width.equalToSuperview().dividedBy(4)
         }
         
         proximityLabel.snp.makeConstraints { (make) in
             make.top.bottom.equalToSuperview()
             make.left.equalTo(timeLabel.snp.right)
-            make.width.equalToSuperview().dividedBy(3)
+            make.width.equalToSuperview().dividedBy(4)
         }
         
         fastenedLabel.snp.makeConstraints { (make) in
             make.top.bottom.equalToSuperview()
-             make.left.equalTo(proximityLabel.snp.right)
-            make.width.equalToSuperview().dividedBy(3)
-            make.right.equalToSuperview()
+            make.left.equalTo(proximityLabel.snp.right)
+            make.width.equalToSuperview().dividedBy(4)
 
+        }
+        
+        accelerometerLabel.snp.makeConstraints { (make) in
+            make.top.bottom.equalToSuperview()
+            make.left.equalTo(fastenedLabel.snp.right)
+            make.width.equalToSuperview().dividedBy(4)
+            make.right.equalToSuperview()
+            
         }
         
         
