@@ -1,13 +1,73 @@
-var express = require('express');
-var router = express.Router();
-var mongodb = require('mongodb');
-
-var MongoClient = mongodb.MongoClient;
+var router = require('express').Router();
+var MongoClient = require('mongodb').MongoClient;
 
 var url = process.env.MONGODB_URI;
 
 function populateSeatData() {
+    MongoClient.connect(url, function(err, db){
+        if(err) {
+            console.log('Unable to connect to db');
+        } else {
+            console.log('Connected to database');
 
+            var seat_collection = db.collection('Seats');
+            var sensor_collection = db.collection('Sensors');
+
+            seat_collection.remove({});
+            sensor_collection.remove({});
+
+            var seats = [];
+            var sensors = [];
+            var proximity = [];
+            var buckled = [];
+            var seatNames = [];
+            var timestamp = new Date().getTime() / 1000;
+
+            for (var i = 1; i < 7; i++) {
+                seatNames.push(i + "A");
+                seatNames.push(i + "B");
+                seatNames.push(i + "E");
+                seatNames.push(i + "F");
+            }
+
+            for (var i = 7; i < 26; i++) {
+                seatNames.push(i + "A");
+                seatNames.push(i + "B");
+                seatNames.push(i + "C");
+                seatNames.push(i + "D");
+                seatNames.push(i + "E");
+                seatNames.push(i + "F");
+            }
+
+            for (var i = 0; i < seatNames.length; i++) {
+                proximity.push(!!Math.floor(Math.random() * 2));
+                if(proximity[i]) {
+                    buckled.push(!!Math.floor(Math.random() * 2));
+                } else {
+                    buckled.push(false);
+                }
+            }
+
+            for (var i = 0; i < seatNames.length; i++) {
+                seats.push(createSeat(seatNames[i], buckled[i], proximity[i]));
+                sensors.push(createSensorArray(seatNames[i], timestamp, buckled[i], proximity[i]));
+            }
+
+            console.log(seatNames);
+
+            seat_collection.insertMany(seats, function(err, result) {
+                if(err) {
+                    console.log(err);
+                }
+            });
+
+            sensor_collection.insertMany(sensors, function(err, result) {
+                if(err) {
+                    console.log(err);
+                }
+            });
+        }
+    });
 }
 
 function createSeat(position, buckled, proximity) {
@@ -43,71 +103,32 @@ router.get('/', function(req, res, next) {
 
 /* Setup Seats */
 router.get('/setupSeats', function(req, res, next) {
-    MongoClient.connect(url, function(err, db){
-        if(err) {
-            console.log('Unable to connect to db');
+    populateSeatData();
+});
+
+/* Get a single seat */
+router.get('/getSeat/:_id', function(req, res, next) {
+   MongoClient.connect(url, function(err, db) {
+       if(err) {
+           console.log('Unable to connect to db');
        } else {
-           console.log('Connected to database');
+           console.log('Connection established');
 
-           var seat_collection = db.collection('Seats');
-           var sensor_collection = db.collection('Sensors');
+           var collection = db.collection('Seats');
 
-           seat_collection.remove({});
-           sensor_collection.remove({});
-
-           var seats = [];
-           var sensors = [];
-           var proximity = [];
-           var buckled = [];
-           var seatNames = [];
-           var timestamp = new Date().getTime() / 1000;
-
-           for (var i = 1; i < 7; i++) {
-               seatNames.push(i + "A");
-               seatNames.push(i + "B");
-               seatNames.push(i + "E");
-               seatNames.push(i + "F");
-           }
-
-           for (var i = 7; i < 26; i++) {
-               seatNames.push(i + "A");
-               seatNames.push(i + "B");
-               seatNames.push(i + "C");
-               seatNames.push(i + "D");
-               seatNames.push(i + "E");
-               seatNames.push(i + "F");
-           }
-
-           for (var i = 0; i < seatNames.length; i++) {
-               proximity.push(!!Math.floor(Math.random() * 2));
-               if(proximity[i]) {
-                   buckled.push(!!Math.floor(Math.random() * 2));
+           collection.find({"_id": req.params._id}).toArray(function(err, result) {
+               if(err) {
+                   res.send(err);
                } else {
-                   buckled.push(false);
+                   console.log(result);
+                   res.send(result);
                }
-           }
-
-           for (var i = 0; i < seatNames.length; i++) {
-                seats.push(createSeat(seatNames[i], buckled[i], proximity[i]));
-                sensors.push(createSensorArray(seatNames[i], timestamp, buckled[i], proximity[i]));
-           }
-
-           console.log(seatNames);
-
-           seat_collection.insertMany(seats, function(err, result) {
-               if(err) {
-                   console.log(err);
-               }
-           });
-
-           sensor_collection.insertMany(sensors, function(err, result) {
-               if(err) {
-                   console.log(err);
-               }
-           });
+           })
        }
+       db.close();
     });
 });
+
 
 /* Get Seats*/
 router.get('/getSeats', function(req, res, next) {
@@ -119,16 +140,16 @@ router.get('/getSeats', function(req, res, next) {
 
             var collection = db.collection('Seats');
 
-            collection.find({}).toArray(function (err, result) {
+            collection.find({}).toArray(function(err, result) {
                 if(err) {
                     res.send(err);
                 } else {
                     console.log(result);
                     res.send(result);
                 }
-                db.close();
             });
         }
+        db.close();
     });
 });
 
