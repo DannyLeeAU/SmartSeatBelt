@@ -92,30 +92,47 @@ class SeatHistoryTable: UITableViewController {
             return $0
         }(UILabel())
         
+        let accelerometerLabel:UILabel = {
+            $0.text = "Turbulence"
+            $0.backgroundColor = UIColor(hexString: "DBEBF6")
+            $0.textAlignment = .center
+            $0.numberOfLines = 0
+            $0.font = UIFont(name: "SanFranciscoDisplay-Bold", size: 11)
+            return $0
+        }(UILabel())
+        
         headerView.addSubview(timeLabel)
         headerView.addSubview(fastenedLabel)
         headerView.addSubview(separator2)
         headerView.addSubview(proximityLabel)
+        headerView.addSubview(accelerometerLabel)
         
         timeLabel.snp.makeConstraints { (make) in
             make.left.equalToSuperview()
             make.top.equalToSuperview()
-            make.width.lessThanOrEqualToSuperview().dividedBy(3)
+            make.width.lessThanOrEqualToSuperview().dividedBy(4)
         }
         
         proximityLabel.snp.makeConstraints { (make) in
             make.left.equalTo(timeLabel.snp.right)
             make.top.equalToSuperview()
-            make.width.lessThanOrEqualToSuperview().dividedBy(3)
+            make.width.lessThanOrEqualToSuperview().dividedBy(4)
             make.bottom.equalTo(timeLabel)
         }
         
         fastenedLabel.snp.makeConstraints { (make) in
             make.left.equalTo(proximityLabel.snp.right)
             make.top.equalToSuperview()
+            make.bottom.equalTo(timeLabel)
+            make.width.lessThanOrEqualToSuperview().dividedBy(4)
+        }
+        
+        accelerometerLabel.snp.makeConstraints { (make) in
+            make.left.equalTo(fastenedLabel.snp.right)
+            make.top.equalToSuperview()
             make.right.equalToSuperview()
             make.bottom.equalTo(timeLabel)
-            make.width.lessThanOrEqualToSuperview().dividedBy(3)
+            make.width.lessThanOrEqualToSuperview().dividedBy(4)
         }
   
         separator2.snp.makeConstraints { (make) in
@@ -172,6 +189,7 @@ class SeatHistoryTable: UITableViewController {
                             var fastenedBool = true
                             var inProximityBool = true
                             var timeStamp = Date()
+                            var accelerometerNum = 0.0
                             
                             // get the value from that key which is an array. If something fails, set it to an empty array
                             let array = value.jsonArray ?? []
@@ -192,9 +210,11 @@ class SeatHistoryTable: UITableViewController {
                                         let epoch = value2.double ?? 0.0
                                         timeStamp = Date(timeIntervalSince1970: epoch)
                                     }
+                                    // get the value for the accelerometer
+//                                    else if key2 = ""
                                 }
                                 // after all of the values are set, create a sensor object and append to array
-                                let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: timeStamp)
+                                let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: timeStamp, accelerometer: accelerometerNum)
                                 self.sensorObjectsArray.append(object)
                             }
                             
@@ -264,10 +284,12 @@ class SeatHistoryTable: UITableViewController {
         let seatBeltFastened = object.fastened
         let proximity = object.inProximity
         let timestamp = object.timeStamp
+        let accelerometer = object.accelerometer
         
         // reformat the date into a way the user can understand
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MM-dd-yyyy\nhh:mm:ss a"
+        //dateFormatter.dateFormat = "MM-dd-yyyy\nhh:mm:ss a"
+        dateFormatter.dateFormat = "hh:mm:ss a"
         let returnString = dateFormatter.string(from: timestamp)
         
         // set the value of the time label
@@ -282,6 +304,10 @@ class SeatHistoryTable: UITableViewController {
         if proximity {
             cell.proximityLabel.text = "✔️"
         }
+        
+        // set value of accelerometer data is found, put a (x, y, z). If not, leave empty.
+        cell.accelerometerLabel.text = ""
+          //fill in when data can be pulled from Mongodb
         
         // don't allow the user to select the rows
         cell.selectionStyle = .none
