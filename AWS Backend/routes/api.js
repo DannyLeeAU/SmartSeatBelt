@@ -1,191 +1,79 @@
-var express = require('express');
-var router = express.Router();
-var mongodb = require('mongodb');
+"use strict";
+const router = require('express').Router();
+const MongoClient = require('mongodb').MongoClient;
 
-var MongoClient = mongodb.MongoClient;
+const DB = require('../db.js');
+const seats = require('../seats.js');
 
-var url = 'mongodb://HoneywellSeniorDesign:%23SeniorDesign17@smartseatbeltsystem-shard-00-00-opjbx.mongodb.net:27017,smartseatbeltsystem-shard-00-01-opjbx.mongodb.net:27017,smartseatbeltsystem-shard-00-02-opjbx.mongodb.net:27017/test?ssl=true&replicaSet=SmartSeatBeltSystem-shard-0&authSource=admin';
+const url = process.env.MONGODB_URI;
+const dbName = 'SmartSeatBeltSystem';
 
-function populateSeatData() {
+/* Middleware to pass asynchronous errors to Express error handler.
+ * https://odino.org/async-slash-await-in-expressjs/
+ */
+const asyncMiddleware = fn => (req, res, next) => {
+    Promise.resolve(fn(req, res, next))
+        .catch(next);
+};
 
-}
+
+
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', (req, res, next) =>  {
     res.render('index', { title: 'Smart Seat/Belt System API' });
 });
 
 /* Setup Seats */
-router.get('/setupSeats', function(req, res, next) {
-    MongoClient.connect(url, function(err, db){
-       if(err){
-           console.log('Unable to connect to db');
-       } else{
-           console.log('Connected to database');
+router.get('/setupSeats', asyncMiddleware(async (req, res, next) => {
+    seats.populateSeatData();
+}));
 
-           var collection = db.collection('Seats');
+/* Get a single seat */
+router.get('/getSeat/:_id', asyncMiddleware(async (req, res, next) => {
+    let database = new DB;
+    try {
+        await database.connect(url, dbName);
+        let result = await database.getCollection('Seats')
+            .findOne({'_id': req.params._id})
+            .toArray();
+        res.send(result);
+    } catch (err) {
+        res.send(err);
+    } finally {
+        await database.close();
+    }
+}));
 
-          collection.remove({});
-
-           var seats = {};
-           var proximity = [];
-           var buckled = [];
-           var seatNames = [];
-
-           for (var i = 1; i < 7; i++) {
-               seatNames.push(i + "A");
-               seatNames.push(i + "B");
-               seatNames.push(i + "E");
-               seatNames.push(i + "F");
-           }
-
-           for (var i = 7; i < 26; i++) {
-               seatNames.push(i + "A");
-               seatNames.push(i + "B");
-               seatNames.push(i + "C");
-               seatNames.push(i + "D");
-               seatNames.push(i + "E");
-               seatNames.push(i + "F");
-           }
-
-           for (var i = 0; i < seatNames.length; i++) {
-               proximity.push(!!Math.floor(Math.random() * 2));
-               buckled.push(!!Math.floor(Math.random() * 2));
-           }
-
-           for (var i = 0; i < seatNames.length; i++) {
-                seats[seatNames[i]] = {
-                    "buckled": buckled[i],
-                    "proximity": proximity[i],
-                    "Timestamp": new Date().getTime() / 1000
-                }
-           }
-
-           console.log(seatNames);
-
-
-
-           collection.insert(seats, function(err,result) {
-               if(err){
-                   console.log(err);
-               }
-               else{
-                   res.redirect('getSeats')
-               }
-               db.close();
-           });
-       }
-    });
-});
 
 /* Get Seats*/
+router.get('/getSeats', asyncMiddleware(async (req, res, next) => {
+    let database = new DB;
+    try {
+        await database.connect(url, dbName);
+        let result = await database.getCollection('Seats')
+            .find()
+            .toArray();
+        res.send(result);
+    } catch (err) {
+        res.send(err);
+    } finally {
+        await database.close();
+    }
+}));
 
-router.get('/getSeats', function(req, res, next) {
-    MongoClient.connect(url, function(err, db){
-        if(err){
-            console.log('Unable to connect to db');
-        } else {
-            console.log('Connection established');
-
-            var collection = db.collection('Seats');
-            //.toArray
-            collection.find({}).toArray(function (err, result) {
-                if(err){
-                    res.send(err);
-                }else{
-                    result = result[0];
-                    console.log(result);
-                    res.send(result);
-                }
-                db.close();
-            });
-        }
-        });
-});
-
-router.get('/getRecentSeats', function(req, res, next) {
-    MongoClient.connect(url, function(err, db) {
-        if(err){
-            console.log('Unable to connect to db');
-        } else {
-            console.log('Connection established');
-
-            var collection = db.collection('Seats');
-
-            collection.find({}).toArray(function (err, result) {
-                if(err){
-                    res.send(err);
-                }else{
-                    var seatNames = [];
-
-                    for (var i = 1; i < 7; i++) {
-                        seatNames.push(i + "A");
-                        seatNames.push(i + "B");
-                        seatNames.push(i + "E");
-                        seatNames.push(i + "F");
-                    }
-
-                    for (var i = 7; i < 26; i++) {
-                        seatNames.push(i + "A");
-                        seatNames.push(i + "B");
-                        seatNames.push(i + "C");
-                        seatNames.push(i + "D");
-                        seatNames.push(i + "E");
-                        seatNames.push(i + "F");
-                    }
-
-                    mostRecentResult = {};
-                    result = JSON.stringify(result[0]);
-                    resultDictionary = JSON.parse(result);
-
-                    //console.log(resultDictionary);
-                    //console.log("RESULT: " + result);
-                    for(var i = 0; i < seatNames.length; i++) {
-                        name = seatNames[i];
-                        historyArray = resultDictionary[name];
-                        doesntmatter = historyArray[0];
-                        mostRecentResult[name] = doesntmatter;
-                        //console.log(mostRecentResult);
-                        //console.log(doesntmatter);
-                        //console.log("history: " + historyArray);
-                        //console.log(resultDictionary[name]);
-                        //mostRecentResult[name] = resultDictionary[name[0]];
-                        //console.log("name" + name);
-                        //console.log("value: " + result[name]);
-                        //console.log("Fancy recent data string: " + mostRecentData)
-                        //mostRecentResult[name] = mostRecentData[0];
-                    }
-                    //console.log(mostRecentResult);
-                    //console.log("most recjkahdflkh: " + mostRecentResult);
-                    //console.log("Fancy result is: " + result);
-                    //console.log("Fancy most recent results: " + mostRecentResult);
-                    res.send(mostRecentResult);
-                }
-                db.close();
-            });
-        }
-    });
-});
-
-// router.get('/getRecentSeats', function(req, res, next) {
-//     MongoClient.connect(url, function(err, db) {
-//         if(err){
-//             console.log('Unable to connect to db');
-//         } else {
-//             console.log('Connection established');
-//
-//             var collection = db.collection('Seats');
-//             collection.find({}).toArray(function (err, result) {
-//                 if(err){
-//                     res.send(err);
-//                 }else{
-//                     //result = result[0];
-//                     console.log(result);
-//                     res.send(result);
-//                 }
-//                 db.close();
-//             });
-//         }
-//     });
-// });
+router.get('/getSensorHistory', asyncMiddleware(async (req, res, next) => {
+    let database = new DB;
+    try {
+        await database.connect(url, dbName);
+        let result = await database.getCollection('Sensors')
+            .find()
+            .toArray();
+        res.send(result);
+    } catch (err) {
+        res.send(err);
+    } finally {
+        await database.close();
+    }
+}));
 
 module.exports = router;
