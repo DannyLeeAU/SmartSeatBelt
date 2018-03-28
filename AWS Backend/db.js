@@ -9,11 +9,11 @@ class DB {
         this.client = null;
         this.db = null;
     }
-    async connect(uri, dbName) {
+    async connect(uri) {
         if (this.db) { return; }
         try {
             this.client = await MongoClient.connect(uri);
-            this.db = this.client.db(dbName);
+            this.db = this.client.db('test');
         } catch (err) {
             console.log("Error connecting to database: " + err.message);
             throw(err);
