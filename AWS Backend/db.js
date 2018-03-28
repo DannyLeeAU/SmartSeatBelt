@@ -15,9 +15,10 @@ class DB {
             this.client = await MongoClient.connect(uri);
             this.db = this.client.db(dbName);
         } catch (err) {
-            console.log("Error connecting: " + err.message);
+            console.log("Error connecting to database: " + err.message);
             throw(err);
         }
+        return this;
     }
     async close() {
         if (this.client) {
@@ -29,16 +30,19 @@ class DB {
             }
         }
     }
+    async getCollection(coll) {
+        this.db.collection(coll, {strict: true}, (err, collection) => {
+            if (err) {
+                console.log('Could not access collection: ' + err.message);
+                throw(err);
+            }
+            return collection;
+        });
+    }
     async addDocument(coll, document) {
-        let collection;
         try {
-            collection = this.db.collection(coll, {strict: false});
-        } catch (err) {
-            console.log("Could not access collection: " + err.message);
-            throw(err);
-        }
-        try {
-            return await collection.insertOne(document, {w: "majority"});
+            return await this.getCollection(coll)
+                .insertOne(document, {w: "majority"});
         } catch (err) {
             console.log("Insert failed: " + err.message);
             throw(err);
