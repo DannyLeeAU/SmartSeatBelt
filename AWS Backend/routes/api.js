@@ -1,12 +1,11 @@
 "use strict";
-const router = require('express').Router();
-const MongoClient = require('mongodb').MongoClient;
+const express = require('express');
+const router = express.Router();
 
 const DB = require('../db.js');
-const seats = require('../seats.js');
+const seats = require('../controllers/seats.js');
+const sensors = require('../controllers/sensors.js');
 
-const url = process.env.MONGODB_URI;
-const dbName = 'SmartSeatBeltSystem';
 
 /* Middleware to pass asynchronous errors to Express error handler.
  * https://odino.org/async-slash-await-in-expressjs/
@@ -17,63 +16,24 @@ const asyncMiddleware = fn => (req, res, next) => {
 };
 
 
-
 /* GET home page. */
 router.get('/', (req, res, next) =>  {
     res.render('index', { title: 'Smart Seat/Belt System API' });
 });
 
-/* Setup Seats */
-router.get('/setupSeats', asyncMiddleware(async (req, res, next) => {
-    seats.populateSeatData();
-}));
+/* Setup seats */
+router.get('/setupSeats', asyncMiddleware(seats.populateSeatData));
 
 /* Get a single seat */
-router.get('/getSeat/:_id', asyncMiddleware(async (req, res, next) => {
-    let database = new DB;
-    try {
-        await database.connect(url, dbName);
-        let result = await database.getCollection('Seats')
-            .findOne({'_id': req.params._id})
-            .toArray();
-        res.send(result);
-    } catch (err) {
-        res.send(err);
-    } finally {
-        await database.close();
-    }
-}));
+router.get('/getSeat/:_id', asyncMiddleware(seats.getOneSeat));
 
+/* Get all seats */
+router.get('/getSeats', asyncMiddleware(seats.getAllSeats));
 
-/* Get Seats*/
-router.get('/getSeats', asyncMiddleware(async (req, res, next) => {
-    let database = new DB;
-    try {
-        await database.connect(url, dbName);
-        let result = await database.getCollection('Seats')
-            .find()
-            .toArray();
-        res.send(result);
-    } catch (err) {
-        res.send(err);
-    } finally {
-        await database.close();
-    }
-}));
+/* Get history of one sensor */
+router.get('/getOneSensor', asyncMiddleware(seats.getOneSensor));
 
-router.get('/getSensorHistory', asyncMiddleware(async (req, res, next) => {
-    let database = new DB;
-    try {
-        await database.connect(url, dbName);
-        let result = await database.getCollection('Sensors')
-            .find()
-            .toArray();
-        res.send(result);
-    } catch (err) {
-        res.send(err);
-    } finally {
-        await database.close();
-    }
-}));
+/* Get entire sensor history */
+router.get('/getSensorHistory', asyncMiddleware(seats.getAllSensors));
 
 module.exports = router;
