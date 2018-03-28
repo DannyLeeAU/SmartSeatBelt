@@ -48,6 +48,15 @@ class DB {
             throw(err);
         }
     }
+    async addManyDocuments(coll, documents) {
+        try {
+            return await this.getCollection(coll)
+                .insertMany(documents, {w: "majority"});
+        } catch (err) {
+            console.log("Insert failed: " + err.message);
+            throw(err);
+        }
+    }
 }
 
 module.exports = DB;
