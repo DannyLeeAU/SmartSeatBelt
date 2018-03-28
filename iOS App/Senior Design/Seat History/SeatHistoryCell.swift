@@ -12,7 +12,7 @@ import UIKit
 /**
  UITableViewCell that is the cell for each row on the seat history table.
  
-12/1/17 - It currently depicts the time of the entry, if a person is in proximity of the seat, and if the seatbelt if fastened.
+ 12/1/17 - It currently depicts the time of the entry, if a person is in proximity of the seat, and if the seatbelt if fastened.
  
  NOTE: When the next group goes to add more sensors, they will need to add more labels and divide the width by the number of sensors they will be supporting (instead of 3).
  **/
@@ -37,10 +37,16 @@ class SeatHistoryCell: UITableViewCell {
         return $0
     }(UILabel())
     
+    //let testLabel: UILabel = {
+      //  $0.textAlignment = .center
+     //   $0.numberOfLines = 1
+    //    $0.backgroundColor = UIColor(hexString: "DBEBF6")
+   //     return $0
+  //  }(UILabel())
+    
     let accelerometerLabel: UILabel = {
         $0.textAlignment = .center
         $0.numberOfLines = 1
-        $0.backgroundColor = UIColor(hexString: "DBEBF6")
         return $0
     }(UILabel())
     
@@ -76,9 +82,8 @@ class SeatHistoryCell: UITableViewCell {
             make.top.bottom.equalToSuperview()
             make.left.equalTo(proximityLabel.snp.right)
             make.width.equalToSuperview().dividedBy(4)
-
         }
-        
+                
         accelerometerLabel.snp.makeConstraints { (make) in
             make.top.bottom.equalToSuperview()
             make.left.equalTo(fastenedLabel.snp.right)
@@ -90,3 +95,4 @@ class SeatHistoryCell: UITableViewCell {
         
     }
 }
+
