@@ -2,7 +2,6 @@
 const express = require('express');
 const router = express.Router();
 
-const DB = require('../db.js');
 const seats = require('../controllers/seats.js');
 const sensors = require('../controllers/sensors.js');
 
@@ -17,7 +16,7 @@ const asyncMiddleware = fn => (req, res, next) => {
 
 
 /* GET home page. */
-router.get('/', (req, res, next) =>  {
+router.get('/', (req, res, next) => {
     res.render('index', { title: 'Smart Seat/Belt System API' });
 });
 
@@ -25,15 +24,15 @@ router.get('/', (req, res, next) =>  {
 router.get('/setupSeats', asyncMiddleware(seats.populateSeatData));
 
 /* Get a single seat */
-router.get('/getSeat/:_id', asyncMiddleware(seats.getOneSeat));
+router.get('/getSeat/:id', asyncMiddleware(seats.getOneSeat));
 
 /* Get all seats */
 router.get('/getSeats', asyncMiddleware(seats.getAllSeats));
 
 /* Get history of one sensor */
-router.get('/getOneSensor', asyncMiddleware(seats.getOneSensor));
+router.get('/getOneSensor/:id', asyncMiddleware(sensors.getOneSensor));
 
 /* Get entire sensor history */
-router.get('/getSensorHistory', asyncMiddleware(seats.getAllSensors));
+router.get('/getSensorHistory', asyncMiddleware(sensors.getAllSensors));
 
 module.exports = router;

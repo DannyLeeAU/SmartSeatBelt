@@ -1,8 +1,6 @@
 "use strict";
 const DB = require('../db.js');
-
 const url = process.env.MONGODB_URI;
-const dbName = 'SmartSeatBeltSystem';
 
 
 function seatNames() {
@@ -47,17 +45,25 @@ function createSensorArray(position, timestamp, buckled, proximity) {
     };
 }
 
+function probability(percentage) {
+    if (0 < percentage <= 100) {
+        return !!Math.floor(Math.random() * (100 / percentage))
+    } else {
+        throw(new Error('Percentage must be 1 to 100'))
+    }
+}
+
 exports.populateSeatData = async (req, res, next) => {
     let database = new DB;
     try {
-        await database.connect(url, dbName);
+        await database.connect(url);
         let seats = [];
         let sensors = [];
         let timestamp = new Date().getTime() / 1000;
 
         for (name of seatNames()) {
-            let proximity = !!Math.floor(Math.random() * 2);
-            let buckled = proximity ? !!Math.floor(Math.random() * 2) : false;
+            let proximity = probability(50);
+            let buckled = proximity ? probability(50) : false;
             seats.push(createSeat(name, buckled, proximity));
             sensors.push(createSensorArray(name, timestamp, buckled, proximity));
         }
@@ -65,7 +71,7 @@ exports.populateSeatData = async (req, res, next) => {
         await database.addManyDocuments('Seats', seats);
         await database.addManyDocuments('Sensors', sensors);
     } catch (err) {
-        res.send(err);
+        throw(err);
     } finally {
         await database.close();
     }
@@ -74,13 +80,11 @@ exports.populateSeatData = async (req, res, next) => {
 exports.getOneSeat = async (req, res, next) => {
     let database = new DB;
     try {
-        await database.connect(url, dbName);
-        let result = await database.getCollection('Seats')
-            .findOne({'_id': req.params._id})
-            .toArray();
+        await database.connect(url);
+        let result = await database.getDocumentById('Seats', req.param._id);
         res.send(result);
     } catch (err) {
-        res.send(err);
+        throw(err);
     } finally {
         await database.close();
     }
@@ -89,13 +93,11 @@ exports.getOneSeat = async (req, res, next) => {
 exports.getAllSeats = async (req, res, next) => {
     let database = new DB;
     try {
-        await database.connect(url, dbName);
-        let result = await database.getCollection('Seats')
-            .find()
-            .toArray();
+        await database.connect(url);
+        let result = await database.getCollectionArray('Seats');
         res.send(result);
     } catch (err) {
-        res.send(err);
+        throw(err);
     } finally {
         await database.close();
     }

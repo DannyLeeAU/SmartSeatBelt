@@ -30,18 +30,27 @@ class DB {
             }
         }
     }
-    async getCollection(coll) {
-        this.db.collection(coll, {strict: true}, (err, collection) => {
-            if (err) {
-                console.log('Could not access collection: ' + err.message);
-                throw(err);
-            }
-            return collection;
-        });
+    async getCollectionArray(coll) {
+        try {
+            let collection = this.db.collection(coll);
+            let cursor = collection.find();
+            return await cursor.toArray();
+        } catch (err) {
+            console.log('Failed to get collection array: ' + err.message);
+            throw(err);
+        }
+    }
+    async getDocumentById(coll, id) {
+        try {
+            let collection = this.db.collection(coll);
+            return await collection.findOne({'_id': id});
+        } catch (err) {
+            console.log('Failed to get document: ' + err.message);
+        }
     }
     async addDocument(coll, document) {
         try {
-            return await this.getCollection(coll)
+            return await this.db.collection(coll)
                 .insertOne(document, {w: "majority"});
         } catch (err) {
             console.log("Insert failed: " + err.message);
@@ -52,6 +61,7 @@ class DB {
         try {
             return await this.getCollection(coll)
                 .insertMany(documents, {w: "majority"});
+
         } catch (err) {
             console.log("Insert failed: " + err.message);
             throw(err);
