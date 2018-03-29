@@ -7,7 +7,7 @@ function seatNames() {
     let seats = [];
     for (let i = 1; i < 26; i++) {
         let column_ids;
-        if (1 <= i < 7) {
+        if (1 <= i && i < 7) {
             column_ids = "ABEF";
         } else {
             column_ids = "ABCDEF";
@@ -61,7 +61,10 @@ exports.populateSeatData = async (req, res, next) => {
         let sensors = [];
         let timestamp = new Date().getTime() / 1000;
 
-        for (name of seatNames()) {
+        await database.dropCollection('Seats');
+        await database.dropCollection('Sensors');
+
+        for (let name of seatNames()) {
             let proximity = probability(50);
             let buckled = proximity ? probability(50) : false;
             seats.push(createSeat(name, buckled, proximity));
@@ -70,6 +73,7 @@ exports.populateSeatData = async (req, res, next) => {
 
         await database.addManyDocuments('Seats', seats);
         await database.addManyDocuments('Sensors', sensors);
+        res.send(true);
     } catch (err) {
         throw(err);
     } finally {
