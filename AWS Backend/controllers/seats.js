@@ -81,7 +81,7 @@ exports.getOneSeat = async (req, res, next) => {
     let database = new DB;
     try {
         await database.connect(url);
-        let result = await database.getDocumentById('Seats', req.param._id);
+        let result = await database.getDocumentById('Seats', req.params.id);
         res.send(result);
     } catch (err) {
         throw(err);

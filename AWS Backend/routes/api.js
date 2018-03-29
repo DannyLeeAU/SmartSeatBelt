@@ -2,8 +2,8 @@
 const express = require('express');
 const router = express.Router();
 
-const seats = require('../controllers/seats.js');
-const sensors = require('../controllers/sensors.js');
+const seat_controller = require('../controllers/seats.js');
+const sensor_controller = require('../controllers/sensors.js');
 
 
 /* Middleware to pass asynchronous errors to Express error handler.
@@ -21,18 +21,18 @@ router.get('/', (req, res, next) => {
 });
 
 /* Setup seats */
-router.get('/setupSeats', asyncMiddleware(seats.populateSeatData));
+router.get('/setupSeats', asyncMiddleware(seat_controller.populateSeatData));
 
 /* Get a single seat */
-router.get('/getSeat/:id', asyncMiddleware(seats.getOneSeat));
+router.get('/getSeat/:id', asyncMiddleware(seat_controller.getOneSeat));
 
 /* Get all seats */
-router.get('/getSeats', asyncMiddleware(seats.getAllSeats));
+router.get('/getSeats', asyncMiddleware(seat_controller.getAllSeats));
 
 /* Get history of one sensor */
-router.get('/getOneSensor/:id', asyncMiddleware(sensors.getOneSensor));
+router.get('/getOneSensor/:id', asyncMiddleware(sensor_controller.getOneSensor));
 
 /* Get entire sensor history */
-router.get('/getSensorHistory', asyncMiddleware(sensors.getAllSensors));
+router.get('/getSensorHistory', asyncMiddleware(sensor_controller.getAllSensors));
 
 module.exports = router;
