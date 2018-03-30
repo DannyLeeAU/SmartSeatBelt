@@ -10,7 +10,7 @@ import UIKit
 import SVProgressHUD // For loading popup
 import JASON // For parsing JSON
 import ChameleonFramework // For colors
-import Alamofire// For API call
+import Alamofire // For API call
 
 // Used to identify which cell is which when registering
 fileprivate let reuseIdentifier = "seatCell"
@@ -18,10 +18,10 @@ fileprivate let reuseIdentifier = "seatCell"
 /**
  This class is used to control the table on the main menu.
  It handles setting up the nav bar, downloading the data, and setting up everything to do with the table, including:
- - how many sections are in the table
- - how many rows are in each section
- - how the cell at each row is set up (uses RowsSeatKey)
- - what happens which you select the cell
+    - how many sections are in the table
+    - how many rows are in each section
+    - how the cell at each row is set up (uses RowsSeatKey)
+    - what happens which you select the cell
  **/
 class TableViewController: UITableViewController {
     
@@ -29,17 +29,17 @@ class TableViewController: UITableViewController {
      - Each key is the seat row/number.
      - Each value is a SensorObject for that seat, which contains all information about that seat. Look at SensorObject.swift for more information.
      Example:   {
-     "1a":{
-     "fastened":true,
-     "inProximity":false,
-     "timeStamp":10932345345
-     },
-     "1b": {
-     "fastened":false,
-     "inProximity":false,
-     "timeStamp":10932345345
-     }
-     }
+                    "1a":{
+                        "fastened":true,
+                        "inProximity":false,
+                        "timeStamp":10932345345
+                    },
+                    "1b": {
+                        "fastened":false,
+                        "inProximity":false,
+                        "timeStamp":10932345345
+                    }
+                }
      - Once the download is complete and the dictionary is populated, the table will reload with all information and dismiss the loading sign.
      **/
     var seatDict = [String:SensorObject]() {
@@ -51,13 +51,13 @@ class TableViewController: UITableViewController {
     
     var seatUnbuckledList = [String](){
         didSet {
-            
+
         }
     }
-    
+
     // Plane indicator of fasten seat belt sign. Currently statically setting this below. Eventually needs to pull from API.
     var fastenSeatBeltSign = true
-    
+
     // Once the view has loaded on the screen.
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -91,10 +91,10 @@ class TableViewController: UITableViewController {
         downloadData()
         
         // Start a timer to redownload data every X seconds (set in timeInterval field)
-        _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(downloadData), userInfo: nil, repeats: true)
+        _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(downloadData), userInfo: nil, repeats: true)
         
     }
-    
+
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -103,8 +103,8 @@ class TableViewController: UITableViewController {
     // Downloads all data from seats
     @objc func downloadData() {
         // Convert the link to where the api is hosted to a url
-        //        let url = URL(string: "https://api.myjson.com/bins/vh20l")
-        let url = URL(string: "http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/API/getRecentSeats")
+//        let url = URL(string: "https://api.myjson.com/bins/vh20l")
+        let url = URL(string: "http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/API/getSeats")
         
         // If that URL conversion worked and is not nil, make the API call.
         // If not, present a download error
@@ -121,22 +121,17 @@ class TableViewController: UITableViewController {
                 if code == 200 {
                     print("Successful Download")
                     
-                    let jsonValue = JSON(response.value).jsonDictionary ?? [:]
-                    for (key, value) in jsonValue {
-                        var fastenedBool = true
-                        var inProximityBool = true
-                        var accelerometerNum = 0.0
-                        for (key2, value2) in value.jsonDictionary! {
-                            if key2 == "isBuckled" {
-                                fastenedBool = value2.boolValue
-                            }
-                            else if key2 == "inProximity" {
-                                inProximityBool = value2.boolValue
-                            }
-                        }
-                        let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: Date(),
-                                                  accelerometer: accelerometerNum)
-                        self.seatDict.updateValue(object, forKey: key)
+                    let jsonArray = JSON(response.value).jsonArray ?? []
+                    for json in jsonArray {
+                        let fastenedBool = json["buckled"].bool ?? true
+                        let inProximityBool = json["proximity"].bool ?? true
+                        let object = SensorObject(
+                            fastened: fastenedBool,
+                            inProximity: inProximityBool,
+                            timeStamp: Date(),
+                            accelerometer: 0.0
+                        )
+                        self.seatDict.updateValue(object, forKey: json["_id"].string!)
                     }
                     
                     // if the seat dictionary doesn't have any values after download has completed, show an error
@@ -145,7 +140,7 @@ class TableViewController: UITableViewController {
                         print("No seats were downloaded")
                     }
                 }
-                    // If the API call was not successful, show download error
+                // If the API call was not successful, show download error
                 else {
                     print("Download unsuccessful with error code: \(String(describing: code))")
                     self.presentDownloadError()
@@ -184,13 +179,13 @@ class TableViewController: UITableViewController {
                 }))
                 self.present(alert, animated: true)
             }
-            
+
             // For simulation purposes, set it to false to show that it goes away.
             // NOTE: THIS WILL NEED TO BE UPGRADED WHEN PROJECT IS EXTENDED TO PULL FROM API CALL
             fastenSeatBeltSign = false
             seatUnbuckledList.removeAll()
         }
-            // If the fasten seat belt sign is not on, hide the banner by setting the height to 0.
+        // If the fasten seat belt sign is not on, hide the banner by setting the height to 0.
         else {
             self.tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
             fastenSeatBeltSign = true
@@ -209,7 +204,7 @@ class TableViewController: UITableViewController {
         alertController.addAction(dismiss)
         self.navigationController?.present(alertController, animated: true, completion: nil)
     }
-    
+
     // Two sections:
     //      0: "First class" section - only has 4 seats/row
     //      1: 6 seats/row
@@ -286,7 +281,7 @@ class TableViewController: UITableViewController {
         let isBuckledE = seatDict["\(rowTag)E"]?.fastened ?? false
         let isBuckledF = seatDict["\(rowTag)F"]?.fastened ?? false
         
-        
+
         // Determine whether a person is in proximity of each seat.
         // First pull the value for the key of the seat (1A, 1B, etc). This value will be a SensorObject.
         // Look at the inProximity property of the seat's SensorObject.
@@ -297,7 +292,7 @@ class TableViewController: UITableViewController {
         let inProximityD = seatDict["\(rowTag)D"]?.inProximity ?? false
         let inProximityE = seatDict["\(rowTag)E"]?.inProximity ?? false
         let inProximityF = seatDict["\(rowTag)F"]?.inProximity ?? false
-        
+
         
         // If this is in section 0, only set up 4 seats/row.
         if indexPath.section == 0 {
@@ -309,14 +304,14 @@ class TableViewController: UITableViewController {
         }
         
         /** Set the colors for each seat.
-         Empty (gray): If no one is in proximity of the seat.
-         Good (light blue): If someone is in proxmity of the seat AND they are buckled
-         Bad (red): If someone is in their seat but not buckled
+                Empty (gray): If no one is in proximity of the seat.
+                Good (light blue): If someone is in proxmity of the seat AND they are buckled
+                Bad (red): If someone is in their seat but not buckled
          
-         FUTURE WORK:
-         Choose a color for when that seat was not purchased for this flight.
-         Restructure all colors for any other sensors that are added, as this will entail more variety of situations.
-         **/
+            FUTURE WORK:
+                Choose a color for when that seat was not purchased for this flight.
+                Restructure all colors for any other sensors that are added, as this will entail more variety of situations.
+        **/
         if !inProximityA {
             cell.buttonA.backgroundColor = emptyColor
         }
@@ -331,7 +326,7 @@ class TableViewController: UITableViewController {
         }
         else if isBuckledB {
             cell.buttonB.backgroundColor = goodColor
-            
+
         } else {
             cell.buttonB.backgroundColor = badColor
         }
@@ -386,13 +381,13 @@ class TableViewController: UITableViewController {
         cell.selectionStyle = .none
         
         return cell
-        
+
     }
     
     /**
-     Show the detail popup for each seat, which includes current seat info and option to see history
-     Input is a UIButton. This is one of the seats from a row.
-     **/
+        Show the detail popup for each seat, which includes current seat info and option to see history
+        Input is a UIButton. This is one of the seats from a row.
+    **/
     @objc func showDetail(button: UIButton) {
         // Get the row number that we added to the button's tag in cellForRow
         let rowNumber = button.tag
@@ -400,7 +395,7 @@ class TableViewController: UITableViewController {
         let seatLetter = button.currentTitle ?? ""
         // Use those to identify which seat
         let identifier = "Seat \(rowNumber)\(seatLetter) Stats"
-        
+
         // Get the SensorObject at the seat
         let object = seatDict["\(rowNumber)\(seatLetter)"]
         // Get all properties of that seat
@@ -417,7 +412,7 @@ class TableViewController: UITableViewController {
             if fastened == false {
                 message = "Passenger seat belt not fastened"
             }
-                // If someone is in proximity with seat belt fastened
+            // If someone is in proximity with seat belt fastened
             else {
                 message = "Passenger in proximity with seat belt fastened"
             }
@@ -426,8 +421,8 @@ class TableViewController: UITableViewController {
         // Popup info on that seat.
         let alertController = UIAlertController(title: identifier, message: message, preferredStyle: .alert)
         let showHistory = UIAlertAction(title: "Show Seat History", style: .default) { (action) in
-            //            let popup = SeatHistoryPopup(seatNumberIn: "\(rowNumber)\(seatLetter)", parentVCIn: self)
-            //            popup.present(in: self)
+//            let popup = SeatHistoryPopup(seatNumberIn: "\(rowNumber)\(seatLetter)", parentVCIn: self)
+//            popup.present(in: self)
             let table = SeatHistoryTable(seatNumberIn:  "\(rowNumber)\(seatLetter)")
             self.navigationController?.pushViewController(table, animated: true)
         }
@@ -442,12 +437,12 @@ class TableViewController: UITableViewController {
         let alertController = UIAlertController(title: "Light/Dark Theme", message: "Choose a light or dark theme.", preferredStyle: .alert)
         let light = UIAlertAction(title: "Light", style: .default) { (action) in
             /**
-             If the user chooses light:
+            If the user chooses light:
              - set this in UserDefaults
              - update background of table to white
              - update separator color between cells to be white so they can't be seen
              - reload table's data to force change
-             **/
+            **/
             UserDefaults.standard.set("Light", forKey: "theme")
             self.tableView.backgroundColor = .white
             self.tableView.separatorColor = .white
@@ -476,7 +471,7 @@ class TableViewController: UITableViewController {
         let seatKey = SeatKeyPopup(string: "")
         seatKey.present(in: self)
     }
-    
+
     @objc func getUnbuckledSeats() {
         // Convert the link to where the api is hosted to a url
         //        let url = URL(string: "https://api.myjson.com/bins/vh20l")
@@ -491,12 +486,12 @@ class TableViewController: UITableViewController {
                 //      200 = Good
                 //      400 = Bad
                 let code = response.response?.statusCode
-                
+
                 // If the API call was successful, parse through the JSON for each seat.
                 // Create a seat object for each and add to dictionary seatDict.
                 if code == 200 {
                     print("Successful Download")
-                    
+
                     let jsonValue = JSON(response.value).jsonDictionary ?? [:]
                     for (key, value) in jsonValue {
                         var fastenedBool = true
@@ -513,7 +508,7 @@ class TableViewController: UITableViewController {
                         if inProximityBool && !fastenedBool {
                             self.seatUnbuckledList.append(key)
                         }
-                        
+
                     }
                 }
                     // If the API call was not successful, show download error
@@ -524,7 +519,7 @@ class TableViewController: UITableViewController {
             }
         }
     }
-    
+
 }
 
 struct AppStylizer {
