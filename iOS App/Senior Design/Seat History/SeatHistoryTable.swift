@@ -30,7 +30,7 @@ class SeatHistoryTable: UITableViewController {
             tableView.reloadData()
         }
     }
-
+    
     init(seatNumberIn: String) {
         seatNumber = seatNumberIn
         super.init(nibName: nil, bundle: nil)
@@ -93,7 +93,7 @@ class SeatHistoryTable: UITableViewController {
         }(UILabel())
         
         let accelerometerLabel:UILabel = {
-            $0.text = "Turbulence"
+            $0.text = "Accelero -meter"
             $0.backgroundColor = UIColor(hexString: "DBEBF6")
             $0.textAlignment = .center
             $0.numberOfLines = 0
@@ -134,7 +134,7 @@ class SeatHistoryTable: UITableViewController {
             make.bottom.equalTo(timeLabel)
             make.width.lessThanOrEqualToSuperview().dividedBy(4)
         }
-  
+        
         separator2.snp.makeConstraints { (make) in
             make.left.right.bottom.equalToSuperview()
             make.top.equalTo(fastenedLabel.snp.bottom)
@@ -166,18 +166,18 @@ class SeatHistoryTable: UITableViewController {
                     
                     /** Get the jsonDictionary of the form
                      {
-                        "1a": [
-                                {
-                                     "fastened":true,
-                                     "inProximity":false,
-                                     "timeStamp":10932345345
-                                },
-                                 {
-                                     "fastened":true,
-                                     "inProximity":false,
-                                     "timeStamp":10932345345
-                                 }
-                              ]
+                     "1a": [
+                     {
+                     "fastened":true,
+                     "inProximity":false,
+                     "timeStamp":10932345345
+                     },
+                     {
+                     "fastened":true,
+                     "inProximity":false,
+                     "timeStamp":10932345345
+                     }
+                     ]
                      }
                      **/
                     let jsonValue = JSON(response.value).jsonDictionary ?? [:]
@@ -201,17 +201,17 @@ class SeatHistoryTable: UITableViewController {
                                     if key2 == "isBuckled" {
                                         fastenedBool = value2.boolValue
                                     }
-                                    // get the value for a person in proximity
+                                        // get the value for a person in proximity
                                     else if key2 == "inProximity" {
                                         inProximityBool = value2.boolValue
                                     }
-                                    // get the value for thet timestamp
+                                        // get the value for thet timestamp
                                     else if key2 == "Timestamp" {
                                         let epoch = value2.double ?? 0.0
                                         timeStamp = Date(timeIntervalSince1970: epoch)
                                     }
                                     // get the value for the accelerometer
-//                                    else if key2 = ""
+                                    //                                    else if key2 = ""
                                 }
                                 // after all of the values are set, create a sensor object and append to array
                                 let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: timeStamp, accelerometer: accelerometerNum)
@@ -229,7 +229,7 @@ class SeatHistoryTable: UITableViewController {
                     }
                     
                     // reverse the array so that the they show in order of time
-//                    self.sensorObjectsArray = self.sensorObjectsArray.reversed()
+                    //                    self.sensorObjectsArray = self.sensorObjectsArray.reversed()
                 }
                     // If the API call was not successful, show download error
                 else {
@@ -307,7 +307,7 @@ class SeatHistoryTable: UITableViewController {
         
         // set value of accelerometer data is found, put a (x, y, z). If not, leave empty.
         cell.accelerometerLabel.text = ""
-          //fill in when data can be pulled from Mongodb
+        //fill in when data can be pulled from Mongodb
         
         // don't allow the user to select the rows
         cell.selectionStyle = .none
@@ -319,3 +319,4 @@ class SeatHistoryTable: UITableViewController {
     }
     
 }
+
