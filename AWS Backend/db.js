@@ -18,7 +18,6 @@ class DB {
             console.log("Error connecting to database: " + err.message);
             throw(err);
         }
-        return this;
     }
     async close() {
         if (this.client) {
@@ -28,6 +27,15 @@ class DB {
                 console.log("Failed to close the database: " + err.message);
                 throw(err);
             }
+        }
+    }
+    async dropCollection(coll) {
+        try {
+            let collection = this.db.collection(coll);
+            return await collection.drop();
+        } catch (err) {
+            console.log('Failed to drop collection: ' + err.message);
+            throw(err);
         }
     }
     async getCollectionArray(coll) {
@@ -50,8 +58,8 @@ class DB {
     }
     async addDocument(coll, document) {
         try {
-            return await this.db.collection(coll)
-                .insertOne(document, {w: "majority"});
+            let collection = this.db.collection(coll);
+            return await collection.insertOne(document, {w: "majority"});
         } catch (err) {
             console.log("Insert failed: " + err.message);
             throw(err);
@@ -59,9 +67,8 @@ class DB {
     }
     async addManyDocuments(coll, documents) {
         try {
-            return await this.getCollection(coll)
-                .insertMany(documents, {w: "majority"});
-
+            let collection = this.db.collection(coll);
+            return await collection.insertMany(documents, {w: "majority"});
         } catch (err) {
             console.log("Insert failed: " + err.message);
             throw(err);

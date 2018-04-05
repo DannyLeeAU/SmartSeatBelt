@@ -98,7 +98,7 @@ class TableViewController: UITableViewController {
     @objc func downloadData() {
         // Convert the link to where the api is hosted to a url
 //        let url = URL(string: "https://api.myjson.com/bins/vh20l")
-        let url = URL(string: "http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/API/getRecentSeats")
+        let url = URL(string: "http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/API/getSeats")
         
         // If that URL conversion worked and is not nil, make the API call.
         // If not, present a download error
@@ -115,20 +115,16 @@ class TableViewController: UITableViewController {
                 if code == 200 {
                     print("Successful Download")
                     
-                    let jsonValue = JSON(response.value).jsonDictionary ?? [:]
-                    for (key, value) in jsonValue {
-                        var fastenedBool = true
-                        var inProximityBool = true
-                        for (key2, value2) in value.jsonDictionary! {
-                            if key2 == "isBuckled" {
-                                fastenedBool = value2.boolValue
-                            }
-                            else if key2 == "inProximity" {
-                                inProximityBool = value2.boolValue
-                            }
-                        }
-                        let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: Date())
-                        self.seatDict.updateValue(object, forKey: key)
+                    let jsonArray = JSON(response.value).jsonArray ?? []
+                    for json in jsonArray {
+                        let fastenedBool = json["buckled"].bool ?? true
+                        let inProximityBool = json["proximity"].bool ?? true
+                        let object = SensorObject(
+                            fastened: fastenedBool,
+                            inProximity: inProximityBool,
+                            timeStamp: Date()
+                        )
+                        self.seatDict.updateValue(object, forKey: json["_id"].string!)
                     }
                     
                     // if the seat dictionary doesn't have any values after download has completed, show an error
