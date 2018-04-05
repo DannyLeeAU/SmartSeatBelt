@@ -69,3 +69,6 @@ fastlane/test_output
 ## Node.js
 node_modules/
 .elasticbeanstalk
+
+## JetBrains IDE
+.idea/
