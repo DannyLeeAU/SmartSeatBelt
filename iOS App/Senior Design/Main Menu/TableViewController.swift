@@ -90,6 +90,10 @@ class TableViewController: UITableViewController {
         // Download all seat data
         downloadData()
         
+        // Subscribe to socket notifications and assign handler
+        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorUpdateNotification(_:)),
+                                               name: NSNotification.Name(rawvalue: "sensorUpdateNotification"))
+        
         // Start a timer to redownload data every X seconds (set in timeInterval field)
         _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(downloadData), userInfo: nil, repeats: true)
         
