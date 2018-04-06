@@ -19,9 +19,9 @@ class SocketIOManager {
     override init() {
         super.init()
         
-        socket.on("sensor update") { data, ack in
+        socket.on("sensor update") { data in
             NotificationCenter.default
-                .post(name: Notification.Name(rawValue: "callSensorUpdate"), object: data[0] as? [String: AnyObject])
+                .post(name: Notification.Name(rawValue: "callSensorUpdate"), object: data as? [String: AnyObject])
         }
     }
     
