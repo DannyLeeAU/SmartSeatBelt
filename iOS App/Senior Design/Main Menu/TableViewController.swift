@@ -103,8 +103,7 @@ class TableViewController: UITableViewController {
     // Downloads all data from seats
     @objc func downloadData() {
         // Convert the link to where the api is hosted to a url
-//        let url = URL(string: "https://api.myjson.com/bins/vh20l")
-        let url = URL(string: "http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/API/getSeats")
+        let url = URL(string: "api/getSeats", relativeTo: BASEURL)
         
         // If that URL conversion worked and is not nil, make the API call.
         // If not, present a download error
@@ -474,9 +473,9 @@ class TableViewController: UITableViewController {
 
     @objc func getUnbuckledSeats() {
         // Convert the link to where the api is hosted to a url
-        //        let url = URL(string: "https://api.myjson.com/bins/vh20l")
-        let url = URL(string: "http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/API/getRecentSeats")
+        let url = URL(string: "api/getSeats", relativeTo: BASEURL)
         var unbuckledSeats = [String]()
+        
         // If that URL conversion worked and is not nil, make the API call.
         // If not, present a download error
         if url != nil {
