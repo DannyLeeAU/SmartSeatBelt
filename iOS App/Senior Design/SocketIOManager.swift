@@ -23,6 +23,11 @@ class SocketIOManager {
             NotificationCenter.default
                 .post(name: Notification.Name(rawValue: "callSensorUpdate"), object: data as? [String: AnyObject])
         }
+        
+        socket.on("sensor download") { data in
+            NotificationCenter.default
+                .post(name: Notification.Name(rawvalue: "callSensorDownload"), object: data as? [[String: AnyObject]])
+        }
     }
     
     func establishConnection() {

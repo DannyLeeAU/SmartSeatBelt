@@ -93,6 +93,8 @@ class TableViewController: UITableViewController {
         // Subscribe to socket notifications and assign handler
         NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorUpdateNotification(_:)),
                                                name: NSNotification.Name(rawvalue: "sensorUpdateNotification"))
+        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorDownloadNotification(_:)),
+                                               name: NSNotification.Name(rawvalue: "sensorDownloadNotification"))
         
         // Start a timer to redownload data every X seconds (set in timeInterval field)
         _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(downloadData), userInfo: nil, repeats: true)
@@ -527,6 +529,19 @@ class TableViewController: UITableViewController {
         let seatID = data["_id"]
         for (sensor, value) in data {
             self.seatDict[seatID][sensor] = value
+        }
+    }
+    
+    func handleSensorDownloadNotification(_ notification: Notification) {
+        let data = notification.object as? [[String: AnyObject]]
+        for seat in data {
+            let object = SensorObject(
+                fastened: seat["fastened"],
+                inProximity: seat["proximity"],
+                timeStamp: Date(),
+                accelerometer: 0.0
+            )
+            self.seatDict.updateValue(object, forKey: data["_id"].string!)
         }
     }
 }
