@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1C8505C63B42D77DBAE9AFB7 /* Pods_Senior_Design.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DDFD9F16B646417BAE0128AC /* Pods_Senior_Design.framework */; };
+		B3C4E9622077D89D00D6815E /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C4E9612077D89D00D6815E /* Constants.swift */; };
+		B3C4E9642077D8FB00D6815E /* SocketIOManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C4E9632077D8FB00D6815E /* SocketIOManager.swift */; };
 		DE4B37F31FCFBEDC00A72421 /* SeatKeyCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4B37F21FCFBEDC00A72421 /* SeatKeyCell.swift */; };
 		DE59500C1FD0FFD300BBDCA9 /* SeatHistoryTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE59500B1FD0FFD300BBDCA9 /* SeatHistoryTable.swift */; };
 		DE5950111FD1096700BBDCA9 /* SeatHistoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5950101FD1096700BBDCA9 /* SeatHistoryCell.swift */; };
@@ -24,6 +26,8 @@
 
 /* Begin PBXFileReference section */
 		1DE3592CA4C670CD5BC67934 /* Pods-Senior Design.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Senior Design.release.xcconfig"; path = "Pods/Target Support Files/Pods-Senior Design/Pods-Senior Design.release.xcconfig"; sourceTree = "<group>"; };
+		B3C4E9612077D89D00D6815E /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		B3C4E9632077D8FB00D6815E /* SocketIOManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketIOManager.swift; sourceTree = "<group>"; };
 		D5E0B1DD6D2E902760C1CC39 /* Pods-Senior Design.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Senior Design.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Senior Design/Pods-Senior Design.debug.xcconfig"; sourceTree = "<group>"; };
 		DDFD9F16B646417BAE0128AC /* Pods_Senior_Design.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Senior_Design.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE4B37F21FCFBEDC00A72421 /* SeatKeyCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeatKeyCell.swift; sourceTree = "<group>"; };
@@ -121,6 +125,8 @@
 				DE730A341F55C08D006544AA /* Assets.xcassets */,
 				DE730A361F55C08D006544AA /* LaunchScreen.storyboard */,
 				DE730A391F55C08D006544AA /* Info.plist */,
+				B3C4E9632077D8FB00D6815E /* SocketIOManager.swift */,
+				B3C4E9612077D89D00D6815E /* Constants.swift */,
 			);
 			path = "Senior Design";
 			sourceTree = "<group>";
@@ -289,10 +295,12 @@
 				DE5950111FD1096700BBDCA9 /* SeatHistoryCell.swift in Sources */,
 				DE730A301F55C08D006544AA /* TableViewController.swift in Sources */,
 				DEAF996E1F58666F0058FBAD /* SensorObject.swift in Sources */,
+				B3C4E9622077D89D00D6815E /* Constants.swift in Sources */,
 				DEE2D0091FCBB7FB00E036E5 /* SeatHistoryGraph.swift in Sources */,
 				DE4B37F31FCFBEDC00A72421 /* SeatKeyCell.swift in Sources */,
 				DE730A2E1F55C08D006544AA /* AppDelegate.swift in Sources */,
 				DE73CBD81F9F8C800043C4AD /* SeatKeyPopup.swift in Sources */,
+				B3C4E9642077D8FB00D6815E /* SocketIOManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
