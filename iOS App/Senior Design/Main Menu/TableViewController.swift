@@ -518,7 +518,13 @@ class TableViewController: UITableViewController {
             }
         }
     }
-
+    func handleSensorUpdateNotification(_ notification: Notification) {
+        let data = notification.object as? [String: AnyObject]
+        let seatID = data["_id"]
+        for (sensor, value) in data {
+            self.seatDict[seatID][sensor] = value
+        }
+    }
 }
 
 struct AppStylizer {
