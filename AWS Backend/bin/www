@@ -8,7 +8,7 @@
 const app = require('../app');
 const debug = require('debug')('smartseatbelt:server');
 const http = require('http');
-const socketio = require('socket.io');
+const socket = require('../socket.js');
 
 /**
  * Get port from environment and store in Express.
@@ -26,9 +26,8 @@ const server = http.createServer(app);
 /**
  * Attach socket.io object to the app, to be used in routes.
  */
-const io = socketio(server);
-app.use(ioMiddleware);
-io.on('connect', logConnection);
+const io = socket.createSocketServer();
+app.use(socketMiddleware);
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -41,20 +40,9 @@ server.on('listening', onListening);
 /**
  * Create middleware for accessing socket.io connection in request.
  */
-function ioMiddleware(req, res, next) {
+function socketMiddleware(req, res, next) {
     req.io = io;
     next();
-}
-
-/**
- * Log details for socket.io connections.
- */
-function logConnection(socket) {
-    let socketId = socket.id.toString();
-    console.log('client ' + socketId + ' connected');
-    socket.on('disconnect', () => {
-        console.log('client ' + socketId + ' disconnected');
-    });
 }
 
 /**
