@@ -28,3 +28,23 @@ exports.getAllSensors = async (req, res, next) => {
         await database.close();
     }
 };
+
+exports.postOneSensor = async (req, res, next) => {
+    let database = new DB;
+    try {
+        let updateSeat = {};
+        updateSeat[req.body.key] = req.body.value;
+        updateSeat['timestamp'] = req.body.timestamp;
+
+        let updateSensor = {};
+        updateSensor[req.body.key] = {value: req.body.value, timestamp: req.body.timestamp};
+
+        await database.connect(url);
+        await database.updateDocumentById('Seats', req.body.id, {$set: updateSeat});
+        await database.updateDocumentById('Sensors', req.body.id, {$push: updateSensor});
+    } catch (err) {
+        res.send(err);
+    } finally {
+        await database.close();
+    }
+};

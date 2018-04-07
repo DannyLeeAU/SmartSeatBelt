@@ -74,6 +74,15 @@ class DB {
             throw(err);
         }
     }
+    async updateDocumentById(coll, id, update) {
+        try {
+            let collection = this.db.collection(coll);
+            let result = await collection.updateOne({'_id': id}, update);
+        } catch (err) {
+            console.log("Update failed: " + err.message);
+            throw(err);
+        }
+    }
 }
 
 module.exports = DB;
