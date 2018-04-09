@@ -527,9 +527,12 @@ class TableViewController: UITableViewController {
     func handleSensorUpdateNotification(_ notification: Notification) {
         let data = notification.object as? [String: AnyObject]
         let seatID = data["_id"]
-        for (sensor, value) in data {
-            self.seatDict[seatID][sensor] = value
-        }
+        let sensor = data["key"]
+        let value = data["value"]
+        let timestamp = data["timestamp"]
+        
+        self.seatDict[seatID][sensor] = value
+        self.seatDict[seatID]["timeStamp"] = timestamp
     }
     
     func handleSensorDownloadNotification(_ notification: Notification) {
@@ -538,7 +541,7 @@ class TableViewController: UITableViewController {
             let object = SensorObject(
                 fastened: seat["fastened"],
                 inProximity: seat["proximity"],
-                timeStamp: Date(),
+                timeStamp: seat["timestamp"],
                 accelerometer: 0.0
             )
             self.seatDict.updateValue(object, forKey: data["_id"].string!)

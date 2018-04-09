@@ -21,12 +21,12 @@ class SocketIOManager {
         
         socket.on("sensor update") { data in
             NotificationCenter.default
-                .post(name: Notification.Name(rawValue: "callSensorUpdate"), object: data as? [String: AnyObject])
+                .post(name: Notification.Name(rawValue: "sensorUpdateNotification"), object: data as? [String: AnyObject])
         }
         
         socket.on("sensor download") { data in
             NotificationCenter.default
-                .post(name: Notification.Name(rawvalue: "callSensorDownload"), object: data as? [[String: AnyObject]])
+                .post(name: Notification.Name(rawvalue: "sensorDownloadNotification"), object: data as? [[String: AnyObject]])
         }
     }
     
