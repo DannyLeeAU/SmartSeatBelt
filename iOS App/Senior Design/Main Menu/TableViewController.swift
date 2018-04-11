@@ -128,6 +128,7 @@ class TableViewController: UITableViewController {
                     
                     let jsonArray = JSON(response.value).jsonArray ?? []
                     for json in jsonArray {
+                        let seatName = json["_id"].string!
                         let fastenedBool = json["buckled"].bool ?? true
                         let inProximityBool = json["proximity"].bool ?? true
                         let object = SensorObject(
@@ -136,7 +137,10 @@ class TableViewController: UITableViewController {
                             timeStamp: Date(),
                             accelerometer: 0.0
                         )
-                        self.seatDict.updateValue(object, forKey: json["_id"].string!)
+                        self.seatDict.updateValue(object, forKey: seatName)
+                        if !fastenedBool && inProximityBool {
+                            self.seatUnbuckledList.append(seatName)
+                        }
                     }
                     
                     // if the seat dictionary doesn't have any values after download has completed, show an error
@@ -173,7 +177,6 @@ class TableViewController: UITableViewController {
             fastenSeatBeltSignView.backgroundColor = UIColor(hexString: "B73636")
             self.tableView.tableHeaderView = fastenSeatBeltSignView
             
-            getUnbuckledSeats()
             if !seatUnbuckledList.isEmpty {
                 let alert = UIAlertController()
                 alert.title = "Unbuckled Warning"
@@ -426,8 +429,6 @@ class TableViewController: UITableViewController {
         // Popup info on that seat.
         let alertController = UIAlertController(title: identifier, message: message, preferredStyle: .alert)
         let showHistory = UIAlertAction(title: "Show Seat History", style: .default) { (action) in
-//            let popup = SeatHistoryPopup(seatNumberIn: "\(rowNumber)\(seatLetter)", parentVCIn: self)
-//            popup.present(in: self)
             let table = SeatHistoryTable(seatNumberIn:  "\(rowNumber)\(seatLetter)")
             self.navigationController?.pushViewController(table, animated: true)
         }
@@ -476,54 +477,7 @@ class TableViewController: UITableViewController {
         let seatKey = SeatKeyPopup(string: "")
         seatKey.present(in: self)
     }
-
-    @objc func getUnbuckledSeats() {
-        // Convert the link to where the api is hosted to a url
-        let url = URL(string: "api/getSeats", relativeTo: BASEURL)
-        var unbuckledSeats = [String]()
-        
-        // If that URL conversion worked and is not nil, make the API call.
-        // If not, present a download error
-        if url != nil {
-            Alamofire.request(url!, method: HTTPMethod.get, parameters: nil).responseJSON { (response) in
-                // Get the code of the response
-                // Jist of what you need to know:
-                //      200 = Good
-                //      400 = Bad
-                let code = response.response?.statusCode
-
-                // If the API call was successful, parse through the JSON for each seat.
-                // Create a seat object for each and add to dictionary seatDict.
-                if code == 200 {
-                    print("Successful Download")
-
-                    let jsonValue = JSON(response.value).jsonDictionary ?? [:]
-                    for (key, value) in jsonValue {
-                        var fastenedBool = true
-                        var inProximityBool = true
-                        var accelerometerNum = 0.0
-                        for (key2, value2) in value.jsonDictionary! {
-                            if key2 == "isBuckled" {
-                                fastenedBool = value2.boolValue
-                            }
-                            else if key2 == "inProximity" {
-                                inProximityBool = value2.boolValue
-                            }
-                        }
-                        if inProximityBool && !fastenedBool {
-                            self.seatUnbuckledList.append(key)
-                        }
-
-                    }
-                }
-                    // If the API call was not successful, show download error
-                else {
-                    print("Download unsuccessful with error code: \(String(describing: code))")
-                    self.presentDownloadError()
-                }
-            }
-        }
-    }
+    
     func handleSensorUpdateNotification(_ notification: Notification) {
         let data = notification.object as? [String: AnyObject]
         let seatID = data["_id"]
