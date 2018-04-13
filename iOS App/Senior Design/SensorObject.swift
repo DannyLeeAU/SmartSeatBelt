@@ -18,8 +18,8 @@ import Foundation
  Future versions could contain more sensors such as air quality, heart rate, etc. as specified by Honeywell.
  **/
 struct SensorObject {
-    let fastened: Bool
-    let inProximity: Bool
-    let timeStamp: Date
-    let accelerometer: Double
+    var fastened: Bool
+    var inProximity: Bool
+    var timeStamp: Date
+    var accelerometer: Double
 }
