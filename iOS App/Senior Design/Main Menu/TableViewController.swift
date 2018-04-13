@@ -92,9 +92,9 @@ class TableViewController: UITableViewController {
         
         // Subscribe to socket notifications and assign handler
         NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorUpdateNotification(_:)),
-                                               name: NSNotification.Name(rawvalue: "sensorUpdateNotification"))
+                                               name: NSNotification.Name(rawValue: "sensorUpdateNotification"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorDownloadNotification(_:)),
-                                               name: NSNotification.Name(rawvalue: "sensorDownloadNotification"))
+                                               name: NSNotification.Name(rawValue: "sensorDownloadNotification"), object: nil)
         
         // Start a timer to redownload data every X seconds (set in timeInterval field)
         _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(downloadData), userInfo: nil, repeats: true)
@@ -478,27 +478,42 @@ class TableViewController: UITableViewController {
         seatKey.present(in: self)
     }
     
-    func handleSensorUpdateNotification(_ notification: Notification) {
-        let data = notification.object as? [String: AnyObject]
-        let seatID = data["_id"]
-        let sensor = data["key"]
-        let value = data["value"]
-        let timestamp = data["timestamp"]
+    @objc func handleSensorUpdateNotification(_ notification: Notification) {
+        let data = notification.object as! [String: AnyObject]
+        let seatID = data["_id"] as! String
+        let sensor = data["sensor"] as! String
+        let timestamp = data["timestamp"] as! Date
         
-        self.seatDict[seatID][sensor] = value
-        self.seatDict[seatID]["timeStamp"] = timestamp
+        var sensorObject = self.seatDict[seatID]
+        
+        if (sensor == "fastened") {
+           let value = data["value"] as! Bool
+            sensorObject?.fastened = value
+        }
+        else if (sensor == "proximity") {
+            let value = data["value"] as! Bool
+            sensorObject?.inProximity = value
+        }
+        else if (sensor == "accelerometer") {
+            let value = data["value"] as! Double
+            sensorObject?.accelerometer = value
+        }
+        
+        sensorObject?.timeStamp = timestamp
+        seatDict.updateValue(sensorObject!, forKey: seatID)
     }
     
-    func handleSensorDownloadNotification(_ notification: Notification) {
+    @objc func handleSensorDownloadNotification(_ notification: Notification) {
         let data = notification.object as? [[String: AnyObject]]
-        for seat in data {
+        for seat in data! {
+            let seatID = seat["_id"] as! String
             let object = SensorObject(
-                fastened: seat["fastened"],
-                inProximity: seat["proximity"],
-                timeStamp: seat["timestamp"],
+                fastened: seat["fastened"] as! Bool,
+                inProximity: seat["proximity"] as! Bool,
+                timeStamp: seat["timestamp"] as! Date,
                 accelerometer: 0.0
             )
-            self.seatDict.updateValue(object, forKey: data["_id"].string!)
+            self.seatDict.updateValue(object, forKey: seatID)
         }
     }
 }
