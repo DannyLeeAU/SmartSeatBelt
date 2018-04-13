@@ -49,11 +49,14 @@ if [ "$REMOVE_NODE" = true ]; then
     brew uninstall --force node
 fi
 
+if [ ! -f "${HOME}/.bashrc" ]; then
+    touch "${HOME}/.bashrc"
+fi
+
 if [ ! -d "${HOME}/.nvm" ]; then
     curl https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
     source "${HOME}/.nvm/nvm.sh"
-    source "${HOME}/.profile"
-    source "${HOME}/.bashrc"
+    source "${HOME}/.profile" || source "${HOME}/.bash_profile" || source "${HOME}/.bashrc"
     nvm install ${node_version}
 fi
 
