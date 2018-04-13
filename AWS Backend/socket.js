@@ -1,7 +1,7 @@
 "use strict";
 const SocketServer = require('socket.io');
 
-const DB = require('db.js');
+const DB = require('./db.js');
 const url = process.env.MONGODB_URI;
 
 
