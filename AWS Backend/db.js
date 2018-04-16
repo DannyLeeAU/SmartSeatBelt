@@ -77,7 +77,7 @@ class DB {
     async updateDocumentById(coll, id, update) {
         try {
             let collection = this.db.collection(coll);
-            return await collection.updateOne({'_id': id}, update);
+            return await collection.updateOne({_id: id}, update);
         } catch (err) {
             console.log("Update failed: " + err.message);
             throw(err);

@@ -62,6 +62,12 @@ class TableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Subscribe to socket notifications and assign handler
+        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorUpdateNotification(_:)),
+                                               name: NSNotification.Name(rawValue: "sensorUpdateNotification"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorDownloadNotification(_:)),
+                                               name: NSNotification.Name(rawValue: "sensorDownloadNotification"), object: nil)
+        
         // Set the top left and right buttons with their title/image and selector
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(named: "options"), style: .plain, target: self, action: #selector(openTheme))
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "See Seat Key", style: .plain, target: self, action: #selector(showSeatKey))
@@ -88,16 +94,10 @@ class TableViewController: UITableViewController {
         self.navigationItem.title = "Smart Seat/Belt"
         
         // Download all seat data
-        downloadData()
-        
-        // Subscribe to socket notifications and assign handler
-        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorUpdateNotification(_:)),
-                                               name: NSNotification.Name(rawValue: "sensorUpdateNotification"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorDownloadNotification(_:)),
-                                               name: NSNotification.Name(rawValue: "sensorDownloadNotification"), object: nil)
+        // downloadData()
         
         // Start a timer to redownload data every X seconds (set in timeInterval field)
-        _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(downloadData), userInfo: nil, repeats: true)
+        // _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(downloadData), userInfo: nil, repeats: true)
         
     }
 
@@ -482,35 +482,33 @@ class TableViewController: UITableViewController {
         let data = notification.object as! [String: AnyObject]
         let seatID = data["_id"] as! String
         let sensor = data["sensor"] as! String
-        let timestamp = data["timestamp"] as! Date
         
-        var sensorObject = self.seatDict[seatID]
+        var sensorObject = self.seatDict[seatID]!
         
-        if (sensor == "fastened") {
+        if (sensor == "buckled") {
            let value = data["value"] as! Bool
-            sensorObject?.fastened = value
+            sensorObject.fastened = value
         }
         else if (sensor == "proximity") {
             let value = data["value"] as! Bool
-            sensorObject?.inProximity = value
+            sensorObject.inProximity = value
         }
         else if (sensor == "accelerometer") {
             let value = data["value"] as! Double
-            sensorObject?.accelerometer = value
+            sensorObject.accelerometer = value
         }
         
-        sensorObject?.timeStamp = timestamp
-        seatDict.updateValue(sensorObject!, forKey: seatID)
+        self.seatDict.updateValue(sensorObject, forKey: seatID)
     }
     
     @objc func handleSensorDownloadNotification(_ notification: Notification) {
-        let data = notification.object as? [[String: AnyObject]]
+        let data = notification.object as? [[String: Any]]
         for seat in data! {
             let seatID = seat["_id"] as! String
             let object = SensorObject(
-                fastened: seat["fastened"] as! Bool,
+                fastened: seat["buckled"] as! Bool,
                 inProximity: seat["proximity"] as! Bool,
-                timeStamp: seat["timestamp"] as! Date,
+                timeStamp: Date(),
                 accelerometer: 0.0
             )
             self.seatDict.updateValue(object, forKey: seatID)
