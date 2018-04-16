@@ -21,7 +21,6 @@
 		DE730A401F585822006544AA /* RowsSeatCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE730A3F1F585822006544AA /* RowsSeatCell.swift */; };
 		DE73CBD81F9F8C800043C4AD /* SeatKeyPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE73CBD71F9F8C800043C4AD /* SeatKeyPopup.swift */; };
 		DEAF996E1F58666F0058FBAD /* SensorObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAF996D1F58666F0058FBAD /* SensorObject.swift */; };
-		DEE2D0091FCBB7FB00E036E5 /* SeatHistoryGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEE2D0081FCBB7FB00E036E5 /* SeatHistoryGraph.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,7 +42,6 @@
 		DE730A3F1F585822006544AA /* RowsSeatCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RowsSeatCell.swift; sourceTree = "<group>"; };
 		DE73CBD71F9F8C800043C4AD /* SeatKeyPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeatKeyPopup.swift; sourceTree = "<group>"; };
 		DEAF996D1F58666F0058FBAD /* SensorObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SensorObject.swift; sourceTree = "<group>"; };
-		DEE2D0081FCBB7FB00E036E5 /* SeatHistoryGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeatHistoryGraph.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,7 +114,6 @@
 			isa = PBXGroup;
 			children = (
 				DE730A2D1F55C08D006544AA /* AppDelegate.swift */,
-				DEDA43251FD616BD0004A54A /* Not Used */,
 				DE59500F1FD100F100BBDCA9 /* Seat History */,
 				DE59500D1FD100C200BBDCA9 /* Main Menu */,
 				DE59500E1FD100E500BBDCA9 /* Seat Key */,
@@ -129,14 +126,6 @@
 				B3C4E9612077D89D00D6815E /* Constants.swift */,
 			);
 			path = "Senior Design";
-			sourceTree = "<group>";
-		};
-		DEDA43251FD616BD0004A54A /* Not Used */ = {
-			isa = PBXGroup;
-			children = (
-				DEE2D0081FCBB7FB00E036E5 /* SeatHistoryGraph.swift */,
-			);
-			path = "Not Used";
 			sourceTree = "<group>";
 		};
 		F1B12EDD6554EF45783487E4 /* Frameworks */ = {
@@ -231,7 +220,6 @@
 				"${BUILT_PRODUCTS_DIR}/JASON/JASON.framework",
 				"${BUILT_PRODUCTS_DIR}/STPopup/STPopup.framework",
 				"${BUILT_PRODUCTS_DIR}/SVProgressHUD/SVProgressHUD.framework",
-				"${BUILT_PRODUCTS_DIR}/ScrollableGraphView/ScrollableGraphView.framework",
 				"${BUILT_PRODUCTS_DIR}/SnapKit/SnapKit.framework",
 				"${BUILT_PRODUCTS_DIR}/Socket.IO-Client-Swift/SocketIO.framework",
 				"${BUILT_PRODUCTS_DIR}/Starscream/Starscream.framework",
@@ -244,7 +232,6 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JASON.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/STPopup.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SVProgressHUD.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ScrollableGraphView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SnapKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SocketIO.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Starscream.framework",
@@ -300,7 +287,6 @@
 				DE730A301F55C08D006544AA /* TableViewController.swift in Sources */,
 				DEAF996E1F58666F0058FBAD /* SensorObject.swift in Sources */,
 				B3C4E9622077D89D00D6815E /* Constants.swift in Sources */,
-				DEE2D0091FCBB7FB00E036E5 /* SeatHistoryGraph.swift in Sources */,
 				DE4B37F31FCFBEDC00A72421 /* SeatKeyCell.swift in Sources */,
 				DE730A2E1F55C08D006544AA /* AppDelegate.swift in Sources */,
 				DE73CBD81F9F8C800043C4AD /* SeatKeyPopup.swift in Sources */,
