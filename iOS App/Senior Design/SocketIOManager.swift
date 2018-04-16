@@ -14,28 +14,28 @@ import SocketIO
 
 @objc class SocketIOManager : NSObject {
     static let sharedInstance = SocketIOManager()
-    let socket = SocketManager(socketURL: BASEURL!).defaultSocket
+    let manager = SocketManager(socketURL: BASEURL!)
     
     override init() {
         super.init()
-        
+        let socket = manager.defaultSocket
         
         socket.on("sensor update") { data, ack in
             NotificationCenter.default
-                .post(name: Notification.Name(rawValue: "sensorUpdateNotification"), object: data as? [String: AnyObject])
+                .post(name: Notification.Name(rawValue: "sensorUpdateNotification"), object: data[0] as? [String: Any])
         }
         
         socket.on("sensor download") { data, ack in
             NotificationCenter.default
-                .post(name: Notification.Name(rawValue: "sensorDownloadNotification"), object: data as? [[String: AnyObject]])
+                .post(name: Notification.Name(rawValue: "sensorDownloadNotification"), object: data[0] as? [[String: Any]])
         }
     }
     
     func establishConnection() {
-        socket.connect()
+        manager.connect()
     }
     
     func closeConnection() {
-        socket.disconnect()
+        manager.disconnect()
     }
 }

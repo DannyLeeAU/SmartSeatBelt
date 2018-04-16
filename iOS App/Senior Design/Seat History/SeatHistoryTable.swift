@@ -147,7 +147,7 @@ class SeatHistoryTable: UITableViewController {
     // Download all data for seats from mongo db using AWS elastic beanstalk
     func downloadData() {
         // create a url object from the given string
-        let url = URL(string: "http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/API/getSeats")
+        let url = URL(string: "api/getSeats", relativeTo: BASEURL)
         
         // if creating the url passed
         if url != nil {

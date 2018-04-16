@@ -32,23 +32,23 @@ exports.getAllSensors = async (req, res, next) => {
 exports.postOneSensor = async (req, res, next) => {
     let database = new DB;
     try {
+        let _id = req.body._id;
         let sensor = req.body.sensor;
         let value = req.body.value;
         let timestamp = req.body.timestamp;
 
         let updateSeat = {};
         updateSeat[sensor] = value;
-        updateSeat['timestamp'] = timestamp;
 
         let updateSensor = {};
         updateSensor[sensor] = {value, timestamp};
 
         await database.connect(url);
         await Promise.all([
-            database.updateDocumentById('Seats', req.body.id, {$set: updateSeat}),
-            database.updateDocumentById('Sensors', req.body.id, {$push: updateSensor})
+            database.updateDocumentById('Seats', _id, {$set: updateSeat}),
+            database.updateDocumentById('Sensors', _id, {$push: updateSensor})
         ]);
-        req.io.emit('sensor update', {key: sensor, value, timestamp});
+        req.io.emit('sensor update', {_id, sensor, value, timestamp});
         res.send(true);
     } catch (err) {
         res.send(err);
