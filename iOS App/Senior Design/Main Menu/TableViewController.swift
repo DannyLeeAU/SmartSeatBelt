@@ -109,7 +109,7 @@ class TableViewController: UITableViewController {
     // Downloads all data from seats
     @objc func downloadData() {
         // Convert the link to where the api is hosted to a url
-        let url = URL(string: "api/getSeats", relativeTo: BASEURL)
+        let url = URL(string: "api/getSeats", relativeTo: BASEURL)?.absoluteURL
         
         // If that URL conversion worked and is not nil, make the API call.
         // If not, present a download error

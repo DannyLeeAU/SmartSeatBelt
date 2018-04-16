@@ -12,21 +12,22 @@
 import Foundation
 import SocketIO
 
-class SocketIOManager {
+@objc class SocketIOManager : NSObject {
     static let sharedInstance = SocketIOManager()
-    var socket = SocketIOClient(socketURL: BASEURL)
+    let socket = SocketManager(socketURL: BASEURL!).defaultSocket
     
     override init() {
         super.init()
         
-        socket.on("sensor update") { data in
+        
+        socket.on("sensor update") { data, ack in
             NotificationCenter.default
                 .post(name: Notification.Name(rawValue: "sensorUpdateNotification"), object: data as? [String: AnyObject])
         }
         
-        socket.on("sensor download") { data in
+        socket.on("sensor download") { data, ack in
             NotificationCenter.default
-                .post(name: Notification.Name(rawvalue: "sensorDownloadNotification"), object: data as? [[String: AnyObject]])
+                .post(name: Notification.Name(rawValue: "sensorDownloadNotification"), object: data as? [[String: AnyObject]])
         }
     }
     
