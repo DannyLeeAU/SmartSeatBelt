@@ -1,54 +1,40 @@
 #!/usr/bin/env node
 "use strict";
 
-/**
- * Module dependencies.
- */
-
-const app = require('../app');
 const debug = require('debug')('smartseatbelt:server');
 const http = require('http');
+
+const app = require('../app');
 const socket = require('../socket.js');
 
 /**
  * Get port from environment and store in Express.
  */
-
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
-
 const server = http.createServer(app);
 
 /**
- * Attach socket.io object to the app, to be used in routes.
+ * Set socket.io server to the app, to be used in routes.
+ * (Requires Express 4 functionality.)
  */
-const io = socket.createSocketServer();
-app.use(socketMiddleware);
+const io = socket.createSocketServer(server);
+app.set('socketio', io);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
-
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
 /**
- * Create middleware for accessing socket.io connection in request.
- */
-function socketMiddleware(req, res, next) {
-    req.io = io;
-    next();
-}
-
-/**
  * Normalize a port into a number, string, or false.
  */
-
 function normalizePort(val) {
     let port = parseInt(val, 10);
 
@@ -68,7 +54,6 @@ function normalizePort(val) {
 /**
  * Event listener for HTTP server "error" event.
  */
-
 function onError(error) {
     if (error.syscall !== 'listen') {
         throw error;
@@ -96,7 +81,6 @@ function onError(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
-
 function onListening() {
     let addr = server.address();
     let bind = typeof addr === 'string'
