@@ -31,6 +31,7 @@ exports.getAllSensors = async (req, res, next) => {
 
 exports.postOneSensor = async (req, res, next) => {
     let database = new DB;
+    let io = req.app.get('socketio');
     try {
         let _id = req.body._id;
         let sensor = req.body.sensor;
@@ -48,7 +49,7 @@ exports.postOneSensor = async (req, res, next) => {
             database.updateDocumentById('Seats', _id, {$set: updateSeat}),
             database.updateDocumentById('Sensors', _id, {$push: updateSensor})
         ]);
-        req.io.emit('sensor update', {_id, sensor, value, timestamp});
+        io.emit('sensor update', {_id, sensor, value, timestamp});
         res.send(true);
     } catch (err) {
         res.send(err);
