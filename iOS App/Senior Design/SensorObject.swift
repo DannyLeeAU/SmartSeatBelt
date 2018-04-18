@@ -23,3 +23,10 @@ struct SensorObject {
     var timeStamp: Date
     var accelerometer: Double
 }
+
+struct SeatObject {
+    var fastened: Bool
+    var proximity: Bool
+    var timeStamp: Date
+    var accelerometer: Double
+}
