@@ -66,7 +66,7 @@ class TableViewController: UITableViewController {
                     $0.textColor = .white
                     return $0
                 }(UILabel())
-                
+
                 fastenSeatBeltSignView.addSubview(label)
                 label.snp.makeConstraints { (make) in
                     make.left.right.equalToSuperview().inset(5)
@@ -74,7 +74,7 @@ class TableViewController: UITableViewController {
                 }
                 fastenSeatBeltSignView.backgroundColor = UIColor(hexString: "B73636")
                 self.tableView.tableHeaderView = fastenSeatBeltSignView
-                
+
                 _ = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(UnbuckledWarningAlert), userInfo: nil, repeats: false)
 
             }
@@ -86,7 +86,7 @@ class TableViewController: UITableViewController {
                     $0.textColor = .white
                     return $0
                 }(UILabel())
-                
+
                 fastenSeatBeltSignView.addSubview(label)
                 label.snp.makeConstraints { (make) in
                     make.left.right.equalToSuperview().inset(5)
@@ -107,7 +107,7 @@ class TableViewController: UITableViewController {
                                                name: NSNotification.Name(rawValue: "sensorUpdateNotification"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorDownloadNotification(_:)),
                                                name: NSNotification.Name(rawValue: "sensorDownloadNotification"), object: nil)
-        
+
         // Set the top left and right buttons with their title/image and selector
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(named: "options"), style: .plain, target: self, action: #selector(openTheme))
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "See Seat Key", style: .plain, target: self, action: #selector(showSeatKey))
@@ -142,7 +142,7 @@ class TableViewController: UITableViewController {
             $0.textColor = .white
             return $0
         }(UILabel())
-        
+
         fastenSeatBeltSignView.addSubview(label)
         label.snp.makeConstraints { (make) in
             make.left.right.equalToSuperview().inset(5)
@@ -152,21 +152,21 @@ class TableViewController: UITableViewController {
         self.tableView.tableHeaderView = fastenSeatBeltSignView
         // Start a timer to redownload data every X seconds (set in timeInterval field)
          _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(changeSeatbeltLight), userInfo: nil, repeats: true)
-        
+
         fastenSeatBeltSign = false
-        
+
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    
+
     // Downloads all data from seats
     @objc func changeSeatbeltLight() {
             fastenSeatBeltSign = !fastenSeatBeltSign
         }
-    
+
     @objc func UnbuckledWarningAlert() {
         if (fastenSeatBeltSign && !seatUnbuckledList.isEmpty) {
             let alert = UIAlertController()
@@ -457,14 +457,14 @@ class TableViewController: UITableViewController {
         let seatKey = SeatKeyPopup(string: "")
         seatKey.present(in: self)
     }
-    
+
     @objc func handleSensorUpdateNotification(_ notification: Notification) {
         let data = notification.object as! [String: AnyObject]
         let seatID = data["_id"] as! String
         let sensor = data["sensor"] as! String
-        
+
         var sensorObject = self.seatDict[seatID]!
-        
+
         if (sensor == "buckled") {
            let value = data["value"] as! Bool
             sensorObject.fastened = value
@@ -477,10 +477,10 @@ class TableViewController: UITableViewController {
             let value = data["value"] as! Double
             sensorObject.accelerometer = value
         }
-        
+
         self.seatDict.updateValue(sensorObject, forKey: seatID)
     }
-    
+
     @objc func handleSensorDownloadNotification(_ notification: Notification) {
         let data = notification.object as? [[String: Any]]
         for seat in data! {
@@ -491,7 +491,7 @@ class TableViewController: UITableViewController {
                 timeStamp: Date(),
                 accelerometer: 0.0
             )
-            
+
             if (object.inProximity && !object.fastened) {
                 self.seatUnbuckledList.append(seatID)
             }
@@ -500,10 +500,11 @@ class TableViewController: UITableViewController {
                     self.seatUnbuckledList.remove(at: self.seatUnbuckledList.index(of: seatID)!)
                 }
             }
-            
+
             self.seatDict.updateValue(object, forKey: seatID)
         }
     }
+
 }
 
 struct AppStylizer {
