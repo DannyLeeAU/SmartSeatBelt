@@ -46,14 +46,10 @@ exports.populateSeatData = async (req, res, next) => {
     try {
         let {seats, sensors} = await createDocuments(database);
         await database.connect(url);
-        await Promise.all([
-            database.dropCollection('Seats'),
-            database.dropCollection('Sensors')
-        ]);
-        await Promise.all([
-            database.addManyDocuments('Seats', seats),
-            database.addManyDocuments('Sensors', sensors)
-        ]);
+        await database.dropCollection('Seats');
+        await database.dropCollection('Sensors');
+        await database.addManyDocuments('Seats', seats);
+        await database.addManyDocuments('Sensors', sensors);
         res.send(true);
     } catch (err) {
         throw(err);

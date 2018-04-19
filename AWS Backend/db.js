@@ -61,7 +61,8 @@ class DB {
             let collection = this.db.collection(coll);
             let findDocuments = {};
             findDocuments[key] = value;
-            return await collection.find(findDocuments)
+            let cursor = await collection.find(findDocuments);
+            return await cursor.toArray();
         } catch (err) {
             console.log('Failed to get documents: ' + err.message);
             throw(err);

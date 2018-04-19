@@ -180,7 +180,7 @@ class SeatHistoryTable: UITableViewController {
                         default:
                             break
                         }
-                        let epoch = document["value"].double ?? 0.0
+                        let epoch = document["time"].double ?? 0.0
                         object.timeStamp = Date(timeIntervalSince1970: epoch)
                         
                         self.sensorObjectsArray.append(object)
