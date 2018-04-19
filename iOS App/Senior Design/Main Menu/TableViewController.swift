@@ -51,17 +51,63 @@ class TableViewController: UITableViewController {
     
     var seatUnbuckledList = [String](){
         didSet {
-
+            UnbuckledWarningAlert()
         }
     }
 
     // Plane indicator of fasten seat belt sign. Currently statically setting this below. Eventually needs to pull from API.
-    var fastenSeatBeltSign = true
+    var fastenSeatBeltSign = Bool() {
+        didSet {
+            if fastenSeatBeltSign {
+                let fastenSeatBeltSignView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 45))
+                let label: UILabel = {
+                    $0.text = "Fasten Seat Belt Sign is On"
+                    $0.textAlignment = .center
+                    $0.textColor = .white
+                    return $0
+                }(UILabel())
+
+                fastenSeatBeltSignView.addSubview(label)
+                label.snp.makeConstraints { (make) in
+                    make.left.right.equalToSuperview().inset(5)
+                    make.top.bottom.equalToSuperview()
+                }
+                fastenSeatBeltSignView.backgroundColor = UIColor(hexString: "B73636")
+                self.tableView.tableHeaderView = fastenSeatBeltSignView
+
+                _ = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(UnbuckledWarningAlert), userInfo: nil, repeats: false)
+
+            }
+            else {
+                let fastenSeatBeltSignView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 45))
+                let label: UILabel = {
+                    $0.text = "Fasten Seat Belt Sign is Off"
+                    $0.textAlignment = .center
+                    $0.textColor = .white
+                    return $0
+                }(UILabel())
+
+                fastenSeatBeltSignView.addSubview(label)
+                label.snp.makeConstraints { (make) in
+                    make.left.right.equalToSuperview().inset(5)
+                    make.top.bottom.equalToSuperview()
+                }
+                fastenSeatBeltSignView.backgroundColor = UIColor(hexString: "D3D3D3")
+                self.tableView.tableHeaderView = fastenSeatBeltSignView
+            }
+        }
+    }
 
     // Once the view has loaded on the screen.
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Subscribe to socket notifications and assign handler
+        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorUpdateNotification(_:)),
+                                               name: NSNotification.Name(rawValue: "sensorUpdateNotification"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorDownloadNotification(_:)),
+                                               name: NSNotification.Name(rawValue: "sensorDownloadNotification"), object: nil)
+
         // Set the top left and right buttons with their title/image and selector
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(named: "options"), style: .plain, target: self, action: #selector(openTheme))
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "See Seat Key", style: .plain, target: self, action: #selector(showSeatKey))
@@ -88,115 +134,49 @@ class TableViewController: UITableViewController {
         self.navigationItem.title = "Smart Seat/Belt"
         
         // Download all seat data
-        downloadData()
-        
-        // Subscribe to socket notifications and assign handler
-        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorUpdateNotification(_:)),
-                                               name: NSNotification.Name(rawvalue: "sensorUpdateNotification"))
-        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorDownloadNotification(_:)),
-                                               name: NSNotification.Name(rawvalue: "sensorDownloadNotification"))
-        
+        // downloadData()
+        let fastenSeatBeltSignView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 45))
+        let label: UILabel = {
+            $0.text = "Fasten Seat Belt Sign OFF"
+            $0.textAlignment = .center
+            $0.textColor = .white
+            return $0
+        }(UILabel())
+
+        fastenSeatBeltSignView.addSubview(label)
+        label.snp.makeConstraints { (make) in
+            make.left.right.equalToSuperview().inset(5)
+            make.top.bottom.equalToSuperview()
+        }
+        fastenSeatBeltSignView.backgroundColor = UIColor(hexString: "B73636")
+        self.tableView.tableHeaderView = fastenSeatBeltSignView
         // Start a timer to redownload data every X seconds (set in timeInterval field)
-        _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(downloadData), userInfo: nil, repeats: true)
-        
+         _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(changeSeatbeltLight), userInfo: nil, repeats: true)
+
+        fastenSeatBeltSign = false
+
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    
-    // Downloads all data from seats
-    @objc func downloadData() {
-        // Convert the link to where the api is hosted to a url
-        let url = URL(string: "api/getSeats", relativeTo: BASEURL)
-        
-        // If that URL conversion worked and is not nil, make the API call.
-        // If not, present a download error
-        if url != nil {
-            Alamofire.request(url!, method: HTTPMethod.get, parameters: nil).responseJSON { (response) in
-                // Get the code of the response
-                // Jist of what you need to know:
-                //      200 = Good
-                //      400 = Bad
-                let code = response.response?.statusCode
-                
-                // If the API call was successful, parse through the JSON for each seat.
-                // Create a seat object for each and add to dictionary seatDict.
-                if code == 200 {
-                    print("Successful Download")
-                    
-                    let jsonArray = JSON(response.value).jsonArray ?? []
-                    for json in jsonArray {
-                        let seatName = json["_id"].string!
-                        let fastenedBool = json["buckled"].bool ?? true
-                        let inProximityBool = json["proximity"].bool ?? true
-                        let object = SensorObject(
-                            fastened: fastenedBool,
-                            inProximity: inProximityBool,
-                            timeStamp: Date(),
-                            accelerometer: 0.0
-                        )
-                        self.seatDict.updateValue(object, forKey: seatName)
-                        if !fastenedBool && inProximityBool {
-                            self.seatUnbuckledList.append(seatName)
-                        }
-                    }
-                    
-                    // if the seat dictionary doesn't have any values after download has completed, show an error
-                    if self.seatDict.count == 0 {
-                        self.presentDownloadError()
-                        print("No seats were downloaded")
-                    }
-                }
-                // If the API call was not successful, show download error
-                else {
-                    print("Download unsuccessful with error code: \(String(describing: code))")
-                    self.presentDownloadError()
-                }
-            }
-        }
-        
-        // If the plane's fastenSeatBelt sign is on, show the banner.
-        // Create a view with a label and set that to the table view's header view.
-        if fastenSeatBeltSign == true {
-            // Header views have to have their dimensions set with CGRect - cannot use snapkit
-            let fastenSeatBeltSignView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 45))
-            let label: UILabel = {
-                $0.text = "Fasten Seat Belt Sign ON"
-                $0.textAlignment = .center
-                $0.textColor = .white
-                return $0
-            }(UILabel())
-            
-            fastenSeatBeltSignView.addSubview(label)
-            label.snp.makeConstraints { (make) in
-                make.left.right.equalToSuperview().inset(5)
-                make.top.bottom.equalToSuperview()
-            }
-            fastenSeatBeltSignView.backgroundColor = UIColor(hexString: "B73636")
-            self.tableView.tableHeaderView = fastenSeatBeltSignView
-            
-            if !seatUnbuckledList.isEmpty {
-                let alert = UIAlertController()
-                alert.title = "Unbuckled Warning"
-                alert.message = "Seatbelt sign is on and passengers are unbuckled. \nPlease check the seating chart."
-                alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.cancel, handler : {
-                    (alertAction: UIAlertAction!) in
-                    alert.dismiss(animated: true, completion: nil)
-                }))
-                self.present(alert, animated: true)
-            }
 
-            // For simulation purposes, set it to false to show that it goes away.
-            // NOTE: THIS WILL NEED TO BE UPGRADED WHEN PROJECT IS EXTENDED TO PULL FROM API CALL
-            fastenSeatBeltSign = false
-            seatUnbuckledList.removeAll()
+    // Downloads all data from seats
+    @objc func changeSeatbeltLight() {
+            fastenSeatBeltSign = !fastenSeatBeltSign
         }
-        // If the fasten seat belt sign is not on, hide the banner by setting the height to 0.
-        else {
-            self.tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 0))
-            fastenSeatBeltSign = true
+
+    @objc func UnbuckledWarningAlert() {
+        if (fastenSeatBeltSign && !seatUnbuckledList.isEmpty) {
+            let alert = UIAlertController()
+            alert.title = "Unbuckled Warning"
+            alert.message = "Seatbelt sign is on and passengers are unbuckled. \nPlease check the seating chart."
+            alert.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.cancel, handler : {
+                (alertAction: UIAlertAction!) in
+                alert.dismiss(animated: true, completion: nil)
+            }))
+            self.present(alert, animated: true)
         }
     }
     
@@ -205,7 +185,7 @@ class TableViewController: UITableViewController {
         SVProgressHUD.dismiss()
         let alertController = UIAlertController(title: "Download Error", message: "Seat information did not download correctly. Please try again.", preferredStyle: .alert)
         let reload = UIAlertAction(title: "Reload", style: .default, handler: { (action) in
-            self.downloadData()
+           // self.downloadData()
         })
         let dismiss = UIAlertAction(title: "Dismiss", style: .cancel, handler: nil)
         alertController.addAction(reload)
@@ -477,30 +457,54 @@ class TableViewController: UITableViewController {
         let seatKey = SeatKeyPopup(string: "")
         seatKey.present(in: self)
     }
-    
-    func handleSensorUpdateNotification(_ notification: Notification) {
-        let data = notification.object as? [String: AnyObject]
-        let seatID = data["_id"]
-        let sensor = data["key"]
-        let value = data["value"]
-        let timestamp = data["timestamp"]
-        
-        self.seatDict[seatID][sensor] = value
-        self.seatDict[seatID]["timeStamp"] = timestamp
+
+    @objc func handleSensorUpdateNotification(_ notification: Notification) {
+        let data = notification.object as! [String: AnyObject]
+        let seatID = data["_id"] as! String
+        let sensor = data["sensor"] as! String
+
+        var sensorObject = self.seatDict[seatID]!
+
+        if (sensor == "buckled") {
+           let value = data["value"] as! Bool
+            sensorObject.fastened = value
+        }
+        else if (sensor == "proximity") {
+            let value = data["value"] as! Bool
+            sensorObject.inProximity = value
+        }
+        else if (sensor == "accelerometer") {
+            let value = data["value"] as! Double
+            sensorObject.accelerometer = value
+        }
+
+        self.seatDict.updateValue(sensorObject, forKey: seatID)
     }
-    
-    func handleSensorDownloadNotification(_ notification: Notification) {
-        let data = notification.object as? [[String: AnyObject]]
-        for seat in data {
+
+    @objc func handleSensorDownloadNotification(_ notification: Notification) {
+        let data = notification.object as? [[String: Any]]
+        for seat in data! {
+            let seatID = seat["_id"] as! String
             let object = SensorObject(
-                fastened: seat["fastened"],
-                inProximity: seat["proximity"],
-                timeStamp: seat["timestamp"],
+                fastened: seat["buckled"] as! Bool,
+                inProximity: seat["proximity"] as! Bool,
+                timeStamp: Date(),
                 accelerometer: 0.0
             )
-            self.seatDict.updateValue(object, forKey: data["_id"].string!)
+
+            if (object.inProximity && !object.fastened) {
+                self.seatUnbuckledList.append(seatID)
+            }
+            else {
+                if self.seatUnbuckledList.contains(seatID) {
+                    self.seatUnbuckledList.remove(at: self.seatUnbuckledList.index(of: seatID)!)
+                }
+            }
+
+            self.seatDict.updateValue(object, forKey: seatID)
         }
     }
+
 }
 
 struct AppStylizer {

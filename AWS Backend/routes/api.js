@@ -35,4 +35,6 @@ router.get('/getOneSensor/:id', asyncMiddleware(sensor_controller.getOneSensor))
 /* Get entire sensor history */
 router.get('/getSensorHistory', asyncMiddleware(sensor_controller.getAllSensors));
 
+router.post('/postSensor', asyncMiddleware(sensor_controller.postOneSensor));
+
 module.exports = router;
