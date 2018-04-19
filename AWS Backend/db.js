@@ -48,12 +48,23 @@ class DB {
             throw(err);
         }
     }
-    async getDocumentById(coll, id) {
+    async getDocumentById(coll, _id) {
         try {
             let collection = this.db.collection(coll);
-            return await collection.findOne({'_id': id});
+            return await collection.findOne({_id});
         } catch (err) {
             console.log('Failed to get document: ' + err.message);
+        }
+    }
+    async getDocumentsByValue(coll, key, value) {
+        try {
+            let collection = this.db.collection(coll);
+            let findDocuments = {};
+            findDocuments[key] = value;
+            return await collection.find(findDocuments)
+        } catch (err) {
+            console.log('Failed to get documents: ' + err.message);
+            throw(err);
         }
     }
     async addDocument(coll, document) {
