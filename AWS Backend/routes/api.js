@@ -2,8 +2,9 @@
 const express = require('express');
 const router = express.Router();
 
-const seat_controller = require('../controllers/seats.js');
-const sensor_controller = require('../controllers/sensors.js');
+const seat_controller = require('../controllers/seat.js');
+const sensor_controller = require('../controllers/sensor.js');
+const plane_controller = require('../controllers/plane.js');
 
 
 /* Middleware to pass asynchronous errors to Express error handler.
@@ -30,11 +31,18 @@ router.get('/getSeat/:id', asyncMiddleware(seat_controller.getOneSeat));
 router.get('/getSeats', asyncMiddleware(seat_controller.getAllSeats));
 
 /* Get history of one sensor */
-router.get('/getOneSensor/:id', asyncMiddleware(sensor_controller.getOneSensor));
+router.get('/getOneSensor/:seat', asyncMiddleware(sensor_controller.getOneSensor));
 
 /* Get entire sensor history */
 router.get('/getSensorHistory', asyncMiddleware(sensor_controller.getAllSensors));
 
+/* Post sensor update */
 router.post('/postSensor', asyncMiddleware(sensor_controller.postOneSensor));
+
+/* Get seatbelt light info */
+router.post('/getSeatbeltLight/:plane', asyncMiddleware(plane_controller.getSeatbeltLight));
+
+/* Post seatbelt light update */
+router.post('/postSeatbeltLight', asyncMiddleware(plane_controller.postSeatbeltLightUpdate));
 
 module.exports = router;

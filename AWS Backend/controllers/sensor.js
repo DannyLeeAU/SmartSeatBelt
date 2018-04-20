@@ -37,7 +37,7 @@ exports.getOneSensor = async (req, res, next) => {
     let database = new DB;
     try {
         await database.connect(url);
-        let result = await database.getDocumentsByValue('Sensors', 'seat', req.params.id);
+        let result = await database.getDocumentsByValue('Sensors', 'seat', req.params.seat);
         res.send(result);
     } catch (err) {
         res.send(err);
