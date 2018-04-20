@@ -19,6 +19,8 @@ long interval = 500; // READING INTERVAL
 int i=0;
 int buttonPin = 2;
 int port = 80;
+double ACCELTHRESHOLD = 40;
+int currentButton = 0;
 
 String response;
 int statusCode = 0;
@@ -150,8 +152,8 @@ void loop(){
   ADXL_ISR();
 
 
-  int seatbelt = readButton(buttonPin);
-  Serial.println(digitalRead(2));
+
+  //Serial.println(digitalRead(2));
   String a = String(k());
   String b = String(m());
   time_t rawtime;
@@ -161,42 +163,83 @@ void loop(){
   timeinfo = localtime ( &rawtime );
   char* local_time = asctime (timeinfo);
 
-  if (client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/",port)) {
-      Serial.println("posting...");
-      String data = "seat=";
-      data.concat(DEFAULT_SEAT);
-      data.concat("&sensor=");
-      
-      if (analogRead(buttonPin) == 1) {
-        data.concat("buckled");
-        data.concat("&value=");
-        data.concat(true);
-      } else {
-        data.concat("unbuckled");
-        data.concat("&value=");
-        data.concat(false);
-      }
-      data.concat("&timestamp=");
-      data.concat(local_time);
-      
-      data.concat("&acceleration=");
-      double acceleration = magnitude(x,y,z);
-      data.concat(acceleration);
-      client.println("POST /open/peripherals HTTP/1.1");
-      client.println("Host:" + Ethernet.localIP());
-      client.println("Content-Type: application/x-www-form-urlencoded");
-      client.println("User-Agent: Arduino/1.0");
-      client.println("Connection:close");
-      client.print("Content-Length:");
-      client.println(data.length());
-      client.println();
-      client.println(data);
-      
-      client.flush();
-      client.stop();
+  int seatbelt = readButton(buttonPin);
+  
+  if (seatbelt != currentButton) {
+    currentButton = seatbelt;
+    if (client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/",port)) {
+        Serial.println("posting...");
+        String data = "seat=";
+        data.concat(DEFAULT_SEAT);
+        data.concat("&sensor=");
+        
+        if (analogRead(buttonPin) == 1) {
+          data.concat("buckled");
+          data.concat("&value=");
+          data.concat(true);
+        } else {
+          data.concat("unbuckled");
+          data.concat("&value=");
+          data.concat(false);
+        }
+        data.concat("&timestamp=");
+        data.concat(local_time);
+        client.println("POST /open/peripherals HTTP/1.1");
+        client.println("Host:" + Ethernet.localIP());
+        client.println("Content-Type: application/x-www-form-urlencoded");
+        client.println("User-Agent: Arduino/1.0");
+        client.println("Connection:close");
+        client.print("Content-Length:");
+        client.println(data.length());
+        client.println();
+        client.println(data);
+        
+        client.flush();
+        client.stop();
+    }
+  }
+  
+  double acceleration = magnitude(x,y,z);
+
+  if (acceleration > ACCELTHRESHOLD) {
+    if (client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/",port)) {
+        Serial.println("posting...");
+        String data = "seat=";
+        data.concat(DEFAULT_SEAT);
+        data.concat("&sensor=");
+        
+        if (analogRead(buttonPin) == 1) {
+          data.concat("buckled");
+          data.concat("&value=");
+          data.concat(true);
+        } else {
+          data.concat("unbuckled");
+          data.concat("&value=");
+          data.concat(false);
+        }
+        data.concat("&timestamp=");
+        data.concat(local_time);
+        
+        data.concat("&acceleration=");
+   
+        Serial.println(acceleration);
+        data.concat(acceleration);
+        client.println("POST /open/peripherals HTTP/1.1");
+        client.println("Host:" + Ethernet.localIP());
+        client.println("Content-Type: application/x-www-form-urlencoded");
+        client.println("User-Agent: Arduino/1.0");
+        client.println("Connection:close");
+        client.print("Content-Length:");
+        client.println(data.length());
+        client.println();
+        client.println(data);
+        
+        client.flush();
+        client.stop();
+    }
   } 
 
-  delay(5); // WAIT HALF SECOND BEFORE SENDING AGAIN
+  delay(50); // WAIT 50ms BEFORE SENDING AGAIN
 }
 
 
