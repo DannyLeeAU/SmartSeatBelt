@@ -3,34 +3,41 @@ const DB = require('../db.js');
 const url = process.env.MONGODB_URI;
 
 
-async function updateSeat(database, seat, sensor, value) {
-    let updateSeat = {};
-    updateSeat[sensor] = value;
-    return database.updateDocumentById('Seats', seat, {$set: updateSeat});
+function updateSeat(body) {
+    let seatUpdate = {};
+    seatUpdate[body.sensor] = body.value;
+    return {$set: seatUpdate};
 }
 
-async function addSensor(database, seat, sensor, value, time) {
-    return database.addDocument('Sensors', {seat, sensor, value, time});
+function addSensor(body) {
+    return {seat: body.seat, sensor: body.sensor, value: body.value, time: body.timestamp};
 }
 
-async function updateDatabase(database, seat, sensor, value, time) {
-    return Promise.all([
-        updateSeat(database, seat, sensor, value),
-        addSensor(database, seat, sensor, value, time)
-    ]);
+async function updateDatabase(body) {
+    let database = new DB;
+    try {
+        await database.connect(url);
+        return Promise.all([
+            database.updateDocumentById('Seats', body.seat, updateSeat(body)),
+            database.addDocument('Sensors', addSensor(body))
+        ]);
+    } catch (err) {
+        throw(err);
+    } finally {
+        await database.close();
+    }
 }
 
-function sendSocketSensor(seat, sensor, value, time) {
-    let io = req.app.get('socketio');
-    io.emit('sensor update', {seat, sensor, value, time});
+function sendSocketSensor(io, body) {
+    let data = {seat: body.seat, sensor: body.sensor, value: body.value, time: body.timestamp};
+    io.emit('sensor update', data);
 }
 
 exports.getOneSensor = async (req, res, next) => {
     let database = new DB;
     try {
         await database.connect(url);
-        let id = req.params.id;
-        let result = await database.getDocumentsByValue('Sensors', 'seat', id);
+        let result = await database.getDocumentsByValue('Sensors', 'seat', req.params.id);
         res.send(result);
     } catch (err) {
         res.send(err);
@@ -53,21 +60,12 @@ exports.getAllSensors = async (req, res, next) => {
 };
 
 exports.postOneSensor = async (req, res, next) => {
-    let database = new DB;
+    let io = req.app.get('socketio');
     try {
-        let seat = req.body.seat;
-        let sensor = req.body.sensor;
-        let value = req.body.value;
-        let time = req.body.timestamp;
-
-        await database.connect(url);
-        await updateDatabase(database, seat, sensor, value, time);
-        sendSocketSensor(seat, sensor, value, time);
-
+        await updateDatabase(req.body);
+        sendSocketSensor(io, req.body);
         res.send(true);
     } catch (err) {
         res.send(err);
-    } finally {
-        await database.close();
     }
 };
