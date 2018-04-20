@@ -40,9 +40,9 @@ router.get('/getSensorHistory', asyncMiddleware(sensor_controller.getAllSensors)
 router.post('/postSensor', asyncMiddleware(sensor_controller.postOneSensor));
 
 /* Get seatbelt light info */
-router.post('/getSeatbeltLight/:plane', asyncMiddleware(plane_controller.getSeatbeltLight));
+router.post('/getOnePlane/:plane', asyncMiddleware(plane_controller.getOnePlane));
 
 /* Post seatbelt light update */
-router.post('/postSeatbeltLight', asyncMiddleware(plane_controller.postSeatbeltLightUpdate));
+router.post('/postPlaneUpdate', asyncMiddleware(plane_controller.postPlaneUpdate));
 
 module.exports = router;

@@ -3,7 +3,7 @@ const DB = require('../db.js');
 let url = process.env.MONGODB_URI;
 
 
-function planeUpdate(body) {
+function createPlaneUpdate(body) {
     let updatePlane = {};
     for (let value in body) {
         if (body.hasOwnProperty(value)) {
@@ -13,7 +13,7 @@ function planeUpdate(body) {
     return {$set: updatePlane};
 }
 
-exports.getPlane = async (req, res, next) => {
+exports.getOnePlane = async (req, res, next) => {
     let database = new DB;
     try {
         await database.connect(url);
@@ -28,7 +28,7 @@ exports.getPlane = async (req, res, next) => {
 
 exports.postPlaneUpdate = async (req, res, next) => {
     let database = new DB;
-    let update = planeUpdate(req.body);
+    let update = createPlaneUpdate(req.body);
     try {
         await database.connect(url);
         await database.updateDocumentById('Planes', req.body.plane, update);
