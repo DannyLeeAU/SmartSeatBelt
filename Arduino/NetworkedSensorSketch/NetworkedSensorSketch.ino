@@ -8,6 +8,7 @@
 
 
 byte mac[] = { 0x00, 0xAB, 0xBC, 0xCC, 0xDE, 0x01 }; // RESERVED MAC ADDRESS
+char serverAddress[] = "52.43.115.120";
 EthernetClient client;
 ADXL345 adxl = ADXL345();             // USE FOR I2C COMMUNICATION
 
@@ -17,7 +18,6 @@ unsigned long currentMillis = 0;
 long interval = 500; // READING INTERVAL
 int i=0;
 int buttonPin = 2;
-char serverAddress[] = "52.43.115.120";
 int port = 80;
 
 String response;
@@ -151,7 +151,7 @@ void loop(){
 
 
   int seatbelt = readButton(buttonPin);
-  Serial.println(analogRead(A0));
+  Serial.println(digitalRead(2));
   String a = String(k());
   String b = String(m());
   time_t rawtime;
@@ -182,7 +182,10 @@ void loop(){
       data.concat("&acceleration=");
       double acceleration = magnitude(x,y,z);
       data.concat(acceleration);
+      client.println("POST /open/peripherals HTTP/1.1");
+      client.println("Host:" + Ethernet.localIP());
       client.println("Content-Type: application/x-www-form-urlencoded");
+      client.println("User-Agent: Arduino/1.0");
       client.println("Connection:close");
       client.print("Content-Length:");
       client.println(data.length());
@@ -193,7 +196,7 @@ void loop(){
       client.stop();
   } 
 
-  delay(500); // WAIT HALF SECOND BEFORE SENDING AGAIN
+  delay(5); // WAIT HALF SECOND BEFORE SENDING AGAIN
 }
 
 
