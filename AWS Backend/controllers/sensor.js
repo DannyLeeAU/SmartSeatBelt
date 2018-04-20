@@ -3,13 +3,13 @@ const DB = require('../db.js');
 const url = process.env.MONGODB_URI;
 
 
-function updateSeat(body) {
+function createSeatUpdate(body) {
     let seatUpdate = {};
     seatUpdate[body.sensor] = body.value;
     return {$set: seatUpdate};
 }
 
-function addSensor(body) {
+function createSensorDocument(body) {
     return {seat: body.seat, sensor: body.sensor, value: body.value, time: body.timestamp};
 }
 
@@ -18,8 +18,8 @@ async function updateDatabase(body) {
     try {
         await database.connect(url);
         return Promise.all([
-            database.updateDocumentById('Seats', body.seat, updateSeat(body)),
-            database.addDocument('Sensors', addSensor(body))
+            database.updateDocumentById('Seats', body.seat, createSeatUpdate(body)),
+            database.addDocument('Sensors', createSensorDocument(body))
         ]);
     } catch (err) {
         throw(err);
