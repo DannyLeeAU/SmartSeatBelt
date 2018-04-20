@@ -3,6 +3,30 @@ const DB = require('../db.js');
 const url = process.env.MONGODB_URI;
 
 
+async function updateSeat(database, seat, sensor, value) {
+    let updateSeat = {};
+    updateSeat[sensor] = value;
+    return database.updateDocumentById('Seats', seat, {$set: updateSeat});
+}
+
+async function addSensor(database, seat, sensor, value, time) {
+    return database.addDocument('Sensors', {seat, sensor, value, time});
+}
+
+async function updateDatabase(seat, sensor, value, time) {
+    let database = new DB;
+    await database.connect(url);
+    return Promise.all([
+        updateSeat(database, seat, sensor, value),
+        addSensor(database, seat, sensor, value, time)
+    ]);
+}
+
+function sendSocketSensor(seat, sensor, value, time) {
+    let io = req.app.get('socketio');
+    io.emit('sensor update', {seat, sensor, value, time});
+}
+
 exports.getOneSensor = async (req, res, next) => {
     let database = new DB;
     try {
@@ -31,26 +55,15 @@ exports.getAllSensors = async (req, res, next) => {
 };
 
 exports.postOneSensor = async (req, res, next) => {
-    let database = new DB;
-    let io = req.app.get('socketio');
     try {
-        let _id = req.body._id;
+        let seat = req.body.seat;
         let sensor = req.body.sensor;
         let value = req.body.value;
-        let timestamp = req.body.timestamp;
+        let time = req.body.timestamp;
 
-        let updateSeat = {};
-        updateSeat[sensor] = value;
+        await updateDatabase(seat, sensor, value, time);
+        sendSocketSensor(seat, sensor, value, time);
 
-        let updateSensor = {};
-        updateSensor[sensor] = {value, timestamp};
-
-        await database.connect(url);
-        await Promise.all([
-            database.updateDocumentById('Seats', _id, {$set: updateSeat}),
-            database.updateDocumentById('Sensors', _id, {$push: updateSensor})
-        ]);
-        io.emit('sensor update', {_id, sensor, value, timestamp});
         res.send(true);
     } catch (err) {
         res.send(err);
