@@ -13,9 +13,7 @@ async function addSensor(database, seat, sensor, value, time) {
     return database.addDocument('Sensors', {seat, sensor, value, time});
 }
 
-async function updateDatabase(seat, sensor, value, time) {
-    let database = new DB;
-    await database.connect(url);
+async function updateDatabase(database, seat, sensor, value, time) {
     return Promise.all([
         updateSeat(database, seat, sensor, value),
         addSensor(database, seat, sensor, value, time)
@@ -55,13 +53,15 @@ exports.getAllSensors = async (req, res, next) => {
 };
 
 exports.postOneSensor = async (req, res, next) => {
+    let database = new DB;
     try {
         let seat = req.body.seat;
         let sensor = req.body.sensor;
         let value = req.body.value;
         let time = req.body.timestamp;
 
-        await updateDatabase(seat, sensor, value, time);
+        await database.connect(url);
+        await updateDatabase(database, seat, sensor, value, time);
         sendSocketSensor(seat, sensor, value, time);
 
         res.send(true);
