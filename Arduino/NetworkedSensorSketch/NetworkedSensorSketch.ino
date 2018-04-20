@@ -4,6 +4,7 @@
 #include <SparkFun_ADXL345.h>
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 
 
 byte mac[] = { 0x00, 0xAB, 0xBC, 0xCC, 0xDE, 0x01 }; // RESERVED MAC ADDRESS
@@ -98,6 +99,12 @@ int m() {
    }  
 }
 
+double magnitude(int x, int y, int z) {
+     double s;
+     s=sqrt((x*x)+(y*y)+(z*z));
+     return s;
+}
+
 void ADXL_ISR() {
   
   // getInterruptSource clears all triggered actions after returning value
@@ -155,7 +162,8 @@ void loop(){
   char* local_time = asctime (timeinfo);
 
   if (client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/",port)) {
-      String data = "seat:";
+      Serial.println("posting...");
+      String data = "seat=";
       data.concat(DEFAULT_SEAT);
       data.concat("&sensor=");
       
@@ -171,12 +179,9 @@ void loop(){
       data.concat("&timestamp=");
       data.concat(local_time);
       
-      data.concat("&X=");
-      data.concat(x);
-      data.concat("&Y=");
-      data.concat(y);
-      data.concat("&Z=");
-      data.concat(z); 
+      data.concat("&acceleration=");
+      double acceleration = magnitude(x,y,z);
+      data.concat(acceleration);
       client.println("Content-Type: application/x-www-form-urlencoded");
       client.println("Connection:close");
       client.print("Content-Length:");
