@@ -12,7 +12,7 @@ class Database {
         this.uri = uri;
     }
     async connect() {
-        if (this.client && this.client.isConnected()) { return; }
+        if (this.client) { return; }
         try {
             this.client = await MongoClient.connect(this.uri);
             this.db = this.client.db('test');
@@ -24,7 +24,10 @@ class Database {
     async close() {
         if (this.client) {
             try {
-                 return this.client.close();
+                 let closePromise = this.client.close();
+                 this.client = null;
+                 this.db = null;
+                 return closePromise;
             } catch(err) {
                 console.log("Failed to close the database: " + err.message);
                 throw(err);
