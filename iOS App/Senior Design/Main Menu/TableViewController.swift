@@ -452,7 +452,7 @@ class TableViewController: UITableViewController {
     //Updates a sensor of a seat in real-time
     @objc func handleSensorUpdateNotification(_ notification: Notification) {
         let data = notification.object as! [String: AnyObject]
-        let seatID = data["_id"] as! String
+        let seatID = data["seat"] as! String
         let sensor = data["sensor"] as! String
 
         var sensorObject = self.seatDict[seatID]!

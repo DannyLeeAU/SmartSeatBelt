@@ -32,7 +32,7 @@ import SocketIO
         
         socket.on("seatbeltlight update") { data, ack in
             NotificationCenter.default
-                .post(name: Notification.Name(rawValue: "seatBeltLightUpdateNotification"), object: data[0] as? [[String: Any]])
+                .post(name: Notification.Name(rawValue: "seatBeltLightUpdateNotification"), object: data[0] as? Bool)
         }
     }
     
