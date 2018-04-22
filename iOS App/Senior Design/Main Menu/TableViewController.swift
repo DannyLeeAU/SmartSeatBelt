@@ -68,7 +68,7 @@ class TableViewController: UITableViewController {
         }
     }
 
-    // Plane indicator of fasten seat belt sign. Currently statically setting this below. Eventually needs to pull from API.
+    // Turns on the plane indicator of fasten seat belt sign.
     fileprivate func seatbeltLightOn() {
         let fastenSeatBeltSignView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 45))
         let label: UILabel = {
@@ -91,6 +91,7 @@ class TableViewController: UITableViewController {
         _ = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(unbuckledWarningAlert), userInfo: nil, repeats: false)
     }
     
+    // Turns off the plane indicator of fasten seat belt sign.
     fileprivate func seatbeltLightOff() {
         let fastenSeatBeltSignView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 45))
         let label: UILabel = {
@@ -502,6 +503,7 @@ class TableViewController: UITableViewController {
         }
     }
     
+    //Updates the seatbelt light data from the database in real-time
     @objc func handleSeatBeltLightUpdateNotification(_ notification: Notification) {
         let data = notification.object as? Bool ?? false
         fastenSeatBeltSign = data

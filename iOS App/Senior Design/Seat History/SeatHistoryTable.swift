@@ -149,7 +149,7 @@ class SeatHistoryTable: UITableViewController {
     // Download all data for seats from MongoDB using AWS elastic beanstalk
     func downloadData() {
         // create a url object from the given string
-        let url = URL(string: "api/getOneSensor/" + seatNumber, relativeTo: BASEURL)
+        let url = URL(string: "api/sensors/" + seatNumber, relativeTo: BASEURL)
         
         // if creating the url passed
         if url != nil {
@@ -173,14 +173,16 @@ class SeatHistoryTable: UITableViewController {
                         switch document["sensor"].stringValue {
                         case "buckled":
                             object.fastened = document["value"].boolValue
+                            object.accelerometer = 0.0
                         case "proximity":
                             object.inProximity = document["value"].boolValue
+                            object.accelerometer = 0.0
                         case "accelerometer":
                             object.accelerometer = document["value"].double ?? 0.0
                         default:
                             break
                         }
-                        let epoch = document["value"].double ?? 0.0
+                        let epoch = document["time"].double ?? 0.0
                         object.timeStamp = Date(timeIntervalSince1970: epoch)
                         
                         self.sensorObjectsArray.append(object)
