@@ -53,7 +53,7 @@ class TableViewController: UITableViewController {
     
     var seatUnbuckledList = [String](){
         didSet {
-            UnbuckledWarningAlert()
+            unbuckledWarningAlert()
         }
     }
     
@@ -68,7 +68,7 @@ class TableViewController: UITableViewController {
         }
     }
 
-    // Plane indicator of fasten seat belt sign. Currently statically setting this below. Eventually needs to pull from API.
+    // Turns on the plane indicator of fasten seat belt sign.
     fileprivate func seatbeltLightOn() {
         let fastenSeatBeltSignView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 45))
         let label: UILabel = {
@@ -86,12 +86,12 @@ class TableViewController: UITableViewController {
         fastenSeatBeltSignView.backgroundColor = UIColor(hexString: "B73636")
         self.tableView.tableHeaderView = fastenSeatBeltSignView
         
-        
         //Checks to see if the seatBeltLight turns off or everyone buckles their seats before showing warning
         //Change timeInterval to change the amount of time it waits
-        _ = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(UnbuckledWarningAlert), userInfo: nil, repeats: false)
+        _ = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(unbuckledWarningAlert), userInfo: nil, repeats: false)
     }
     
+    // Turns off the plane indicator of fasten seat belt sign.
     fileprivate func seatbeltLightOff() {
         let fastenSeatBeltSignView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 45))
         let label: UILabel = {
@@ -121,6 +121,8 @@ class TableViewController: UITableViewController {
                                                name: NSNotification.Name(rawValue: "sensorUpdateNotification"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSensorDownloadNotification(_:)),
                                                name: NSNotification.Name(rawValue: "sensorDownloadNotification"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(TableViewController.handleSeatBeltLightUpdateNotification(_:)),
+                                               name: NSNotification.Name(rawValue: "seatBeltLightUpdateNotification"), object: nil)
 
         // Set the top left and right buttons with their title/image and selector
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(named: "options"), style: .plain, target: self, action: #selector(openTheme))
@@ -154,28 +156,6 @@ class TableViewController: UITableViewController {
             (alertAction: UIAlertAction!) in
             self.alert.dismiss(animated: true, completion: nil)
         }))
-        
-        //sets the seatbelt light
-        let fastenSeatBeltSignView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 45))
-        let label: UILabel = {
-            $0.text = "Fasten Seat Belt Sign OFF"
-            $0.textAlignment = .center
-            $0.textColor = .white
-            return $0
-        }(UILabel())
-
-        fastenSeatBeltSignView.addSubview(label)
-        label.snp.makeConstraints { (make) in
-            make.left.right.equalToSuperview().inset(5)
-            make.top.bottom.equalToSuperview()
-        }
-        fastenSeatBeltSignView.backgroundColor = UIColor(hexString: "B73636")
-        self.tableView.tableHeaderView = fastenSeatBeltSignView
-        // Start a timer to redownload data every X seconds (set in timeInterval field)
-         _ = Timer.scheduledTimer(timeInterval: 15, target: self, selector: #selector(changeSeatbeltLight), userInfo: nil, repeats: true)
-
-        fastenSeatBeltSign = false
-
     }
 
     // Dispose of any resources that can be recreated.
@@ -183,15 +163,13 @@ class TableViewController: UITableViewController {
         super.didReceiveMemoryWarning()
     }
 
-    // Downloads all data from seats
-    @objc func changeSeatbeltLight() {
-            fastenSeatBeltSign = !fastenSeatBeltSign
-        }
-
-    //Shows the Unbuckled Warning Alert
-    @objc func UnbuckledWarningAlert() {
+    //Shows the Unbuckled Warning Alert if conditions are true. Otherwise it dismisses the alert.
+    @objc func unbuckledWarningAlert() {
         if (fastenSeatBeltSign && !seatUnbuckledList.isEmpty) {
             self.present(alert, animated: true)
+        }
+        else {
+            self.alert.dismiss(animated: true, completion: nil)
         }
     }
     
@@ -383,7 +361,6 @@ class TableViewController: UITableViewController {
         cell.selectionStyle = .none
         
         return cell
-
     }
     
     /**
@@ -496,10 +473,8 @@ class TableViewController: UITableViewController {
         if (sensorObject.inProximity && !sensorObject.fastened && !self.seatUnbuckledList.contains(seatID)) {
             self.seatUnbuckledList.append(seatID)
         }
-        else {
-            if self.seatUnbuckledList.contains(seatID) {
+        else if self.seatUnbuckledList.contains(seatID){
                 self.seatUnbuckledList.remove(at: self.seatUnbuckledList.index(of: seatID)!)
-            }
         }
         
         self.seatDict.updateValue(sensorObject, forKey: seatID)
@@ -520,14 +495,18 @@ class TableViewController: UITableViewController {
             if (object.inProximity && !object.fastened && !self.seatUnbuckledList.contains(seatID)) {
                 self.seatUnbuckledList.append(seatID)
             }
-            else {
-                if self.seatUnbuckledList.contains(seatID) {
+            else if self.seatUnbuckledList.contains(seatID){
                     self.seatUnbuckledList.remove(at: self.seatUnbuckledList.index(of: seatID)!)
-                }
             }
 
             self.seatDict.updateValue(object, forKey: seatID)
         }
+    }
+    
+    //Updates the seatbelt light data from the database in real-time
+    @objc func handleSeatBeltLightUpdateNotification(_ notification: Notification) {
+        let data = notification.object as? Bool ?? false
+        fastenSeatBeltSign = data
     }
 }
 
