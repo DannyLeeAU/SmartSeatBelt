@@ -4,15 +4,17 @@
 
 const MongoClient = require('mongodb').MongoClient;
 
-class DB {
-    constructor() {
+
+class Database {
+    constructor(uri) {
         this.client = null;
         this.db = null;
+        this.uri = uri;
     }
-    async connect(uri) {
-        if (this.db) { return; }
+    async connect() {
+        if (this.client && this.client.isConnected()) { return; }
         try {
-            this.client = await MongoClient.connect(uri);
+            this.client = await MongoClient.connect(this.uri);
             this.db = this.client.db('test');
         } catch (err) {
             console.log("Error connecting to database: " + err.message);
@@ -27,6 +29,15 @@ class DB {
                 console.log("Failed to close the database: " + err.message);
                 throw(err);
             }
+        }
+    }
+    async createIndex(coll, field) {
+        try {
+            let collection = this.db.collection(coll);
+            await collection.createIndex(field);
+        } catch (err) {
+            console.error(`Failed to create index: ${err.message}`);
+            throw(err);
         }
     }
     async dropCollection(coll) {
@@ -56,12 +67,16 @@ class DB {
             console.log('Failed to get document: ' + err.message);
         }
     }
-    async getDocumentsByValue(coll, key, value) {
+    async getDocumentsByValue(coll, key, value, sort=null) {
         try {
             let collection = this.db.collection(coll);
             let findDocuments = {};
             findDocuments[key] = value;
-            return await collection.find(findDocuments)
+            let cursor = await collection.find(findDocuments);
+            if (sort) {
+                cursor = cursor.sort(sort);
+            }
+            return await cursor.toArray();
         } catch (err) {
             console.log('Failed to get documents: ' + err.message);
             throw(err);
@@ -96,4 +111,4 @@ class DB {
     }
 }
 
-module.exports = DB;
+module.exports = Database;

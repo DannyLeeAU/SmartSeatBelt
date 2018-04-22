@@ -4,8 +4,7 @@ const express = require('express');
 const path = require('path');
 const favicon = require('serve-favicon');
 const logger = require('morgan');
-const index = require('./routes/index');
-const api = require('./routes/api');
+const router = require('./router');
 
 const app = express();
 
@@ -19,8 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', index);
-app.use('/api', api);
+app.use('/', router);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
