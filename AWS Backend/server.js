@@ -4,8 +4,8 @@
 const debug = require('debug')('smartseatbelt:server');
 const http = require('http');
 
-const app = require('../app');
-const socket = require('../socket.js');
+const app = require('./app');
+const io = require('./models/socket/index');
 
 /**
  * Get port from environment and store in Express.
@@ -22,7 +22,8 @@ const server = http.createServer(app);
  * Set socket.io server to the app, to be used in routes.
  * (Requires Express 4 functionality.)
  */
-const io = socket.createSocketServer(server);
+io.addHandlers();
+io.attach(server);
 app.set('socketio', io);
 
 /**

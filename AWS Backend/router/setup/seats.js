@@ -1,6 +1,6 @@
 "use strict";
-const DB = require('../db.js');
-const url = process.env.MONGODB_URI;
+
+const database = require('../../models/database/index');
 
 
 function seatNames() {
@@ -47,46 +47,23 @@ function createSensorArray() {
     return sensors;
 }
 
-exports.populateSeatData = async (req, res, next) => {
-    let database = new DB;
+
+async function populateSeatData(req, res, next) {
     let seats = createSeatArray();
     let sensors = createSensorArray();
     try {
-        await database.connect(url);
+        await database.connect();
         await database.dropCollection('Seats');
         await database.dropCollection('Sensors');
         await database.addManyDocuments('Seats', seats);
         await database.addManyDocuments('Sensors', sensors);
+        await database.createIndex('Sensors', 'time');
         res.send(true);
     } catch (err) {
         throw(err);
     } finally {
         await database.close();
     }
-};
+}
 
-exports.getOneSeat = async (req, res, next) => {
-    let database = new DB;
-    try {
-        await database.connect(url);
-        let result = await database.getDocumentById('Seats', req.params.id);
-        res.send(result);
-    } catch (err) {
-        throw(err);
-    } finally {
-        await database.close();
-    }
-};
-
-exports.getAllSeats = async (req, res, next) => {
-    let database = new DB;
-    try {
-        await database.connect(url);
-        let result = await database.getCollectionArray('Seats');
-        res.send(result);
-    } catch (err) {
-        throw(err);
-    } finally {
-        await database.close();
-    }
-};
+module.exports = populateSeatData;
