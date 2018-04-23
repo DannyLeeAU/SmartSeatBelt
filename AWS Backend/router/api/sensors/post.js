@@ -1,6 +1,6 @@
 "use strict";
 
-const database = require('../../../models/database');
+const DatabaseFactory = require('../../../factories/database');
 
 
 function createSeatUpdate(req) {
@@ -20,6 +20,7 @@ function createSensorDataMap(req) {
 
 
 async function postOneSensor(req, res, next) {
+    let database = DatabaseFactory.getDatabase();
     let io = req.app.get('socketio');
     let update = createSeatUpdate(req);
     let sensorData = createSensorDataMap(req);
