@@ -1,90 +1,129 @@
+/** 
+ *  This sketch does the following:
+ *    - Checks an ADXL345 accelerometer and calculates the magnitude of acceleration
+ *    - Checks if a push button has been pushed. The button toggles an LED 
+ *    - The sketch opens an Ethernet connection and connects to an AWS server 
+ *    - The values of the accelerometer and the push button state are sent to the server via post request 
+ *  
+ *  @TODO fix the post request 
+ *  @Author William McCarty
+ *  @Version 2.0
+ */
+
 #include <ArduinoHttpClient.h>
 #include <Ethernet.h>
 #include <SPI.h>
 #include <SparkFun_ADXL345.h>
 #include <stdio.h>
-#include <time.h>
 #include <math.h>
+#include <time.h>
+#include <Process.h>
+#include <TextFinder.h>
 
+//////////////////////
+#define TIMEOUT 2000
+#define DEBUG 1
 
+//////////////////////
+// NETWORKING
+//////////////////////
 byte mac[] = { 0x00, 0xAB, 0xBC, 0xCC, 0xDE, 0x01 }; // RESERVED MAC ADDRESS
+byte ip[] = { 192, 168, 0, 177 };
 char serverAddress[] = "52.43.115.120";
 EthernetClient client;
+
+//////////////////////
+// Accelerometer
+//////////////////////
 ADXL345 adxl = ADXL345();             // USE FOR I2C COMMUNICATION
 
 String DEFAULT_SEAT = "1A";
+double DEFAULT_TIME = 2.2222;
+const char* AWS_URL = "http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/";
 long previousMillis = 0;
+int port = 80;
 unsigned long currentMillis = 0;
 long interval = 500; // READING INTERVAL
 int i=0;
-int buttonPin = 2;
-int port = 80;
 double ACCELTHRESHOLD = 40;
-int currentButton = 0;
 
+
+//////////////////////
+// Button Constants 
+//////////////////////
+const int buttonPin = 8;
+const int ledPin = 9;
+int currentButton = 0;
+int flag = 0;
 String response;
 int statusCode = 0;
+TextFinder finder(Serial);
 
+/**
+ * Setup method 
+ */
 void setup() {
   Serial.begin(9600);
   pinMode(3, INPUT);      // sets the digital pin as output
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
   }
+  Serial.println("Warming up");
   delay(10000); // GIVE THE SENSOR SOME TIME TO START
+  Serial.println("Ready");
 
-  adxl.powerOn();                     // Power on the ADXL345
+  client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/", 80);
+  if (client.connected()) {
+    Serial.println("connected");
+    client.println("GET /search?q=arduino HTTP/1.0");
+    client.println();
+  } else {
+    Serial.println("connection failed");
+  }
 
-  adxl.setRangeSetting(16);           // Give the range settings
-                                      // Accepted values are 2g, 4g, 8g or 16g
-                                      // Higher Values = Wider Measurement Range
-                                      // Lower Values = Greater Sensitivity
+  client.stop();
 
-  adxl.setSpiBit(1);                  // Configure the device to be in 4 wire SPI mode when set to '0' or 3 wire SPI mode when set to 1
-                                      // Default: Set to 1
-                                      // SPI pins on the ATMega328: 11, 12 and 13 as reference in SPI Library 
-   
+  
+  adxl.powerOn();                     
+  adxl.setRangeSetting(16);               
+  adxl.setSpiBit(1);                  
   adxl.setActivityXYZ(1, 0, 0);       // Set to activate movement detection in the axes "adxl.setActivityXYZ(X, Y, Z);" (1 == ON, 0 == OFF)
   adxl.setActivityThreshold(75);      // 62.5mg per increment   // Set activity   // Inactivity thresholds (0-255)
- 
   adxl.setInactivityXYZ(1, 0, 0);     // Set to detect inactivity in all the axes "adxl.setInactivityXYZ(X, Y, Z);" (1 == ON, 0 == OFF)
   adxl.setInactivityThreshold(75);    // 62.5mg per increment   // Set inactivity // Inactivity thresholds (0-255)
   adxl.setTimeInactivity(10);         // How many seconds of no activity is inactive?
-
   adxl.setTapDetectionOnXYZ(0, 0, 1); // Detect taps in the directions turned ON "adxl.setTapDetectionOnX(X, Y, Z);" (1 == ON, 0 == OFF)
- 
   // Set values for what is considered a TAP and what is a DOUBLE TAP (0-255)
   adxl.setTapThreshold(50);           // 62.5 mg per increment
   adxl.setTapDuration(15);            // 625 μs per increment
   adxl.setDoubleTapLatency(80);       // 1.25 ms per increment
   adxl.setDoubleTapWindow(200);       // 1.25 ms per increment
- 
-  // Set values for what is considered FREE FALL (0-255)
   adxl.setFreeFallThreshold(7);       // (5 - 9) recommended - 62.5mg per increment
   adxl.setFreeFallDuration(30);       // (20 - 70) recommended - 5ms per increment
- 
-  // Setting all interupts to take place on INT1 pin
-  //adxl.setImportantInterruptMapping(1, 1, 1, 1, 1);     // Sets "adxl.setEveryInterruptMapping(single tap, double tap, free fall, activity, inactivity);" 
-                                                        // Accepts only 1 or 2 values for pins INT1 and INT2. This chooses the pin on the ADXL345 to use for Interrupts.
-                                                        // This library may have a problem using INT2 pin. Default to INT1 pin.
-  
-  // Turn on Interrupts for each mode (1 == ON, 0 == OFF)
+
+  //////////////////////
+  //   ADXL Flags 
+  //////////////////////
   adxl.InactivityINT(1);
   adxl.ActivityINT(1);
   adxl.FreeFallINT(1);
   adxl.doubleTapINT(1);
   adxl.singleTapINT(1);
 
-}
-int k(){
-   if(digitalRead(2)){
-        return 0;
-       }else{
-        return 1; 
-       } 
-       
-}
+  //////////////////////
+  // Button Stuff 
+  //////////////////////
+  pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
 
+} 
+
+
+
+/**
+ * Function to read the button 
+ * @param 
+ */
 int readButton(int pin) {
    if(analogRead(pin)==1) {
         return 1;
@@ -93,23 +132,35 @@ int readButton(int pin) {
        }  
 }
 
-int m() {
-  if(analogRead(buttonPin)==1) {
-        return 1;
-   } else {
-        return 0; 
-   }  
-}
 
+
+/**
+ * @parm x 
+ * @parm y 
+ * @parm z
+ */
 double magnitude(int x, int y, int z) {
      double s;
      s=sqrt((x*x)+(y*y)+(z*z));
      return s;
 }
 
+
+/**
+ * Function to flush the serial buffer
+ */
+void flushSerial() {
+  while (Serial.available() > 0) {
+    Serial.read();
+  }
+}
+
+
+/** 
+ * Function for the accelerometer 
+ */ 
 void ADXL_ISR() {
-  
-  // getInterruptSource clears all triggered actions after returning value
+
   // Do not call again until you need to recheck for triggered actions
   byte interrupts = adxl.getInterruptSource();
   
@@ -119,15 +170,9 @@ void ADXL_ISR() {
     //add code here to do when free fall is sensed
   } 
   
-  // Inactivity
-  if(adxl.triggered(interrupts, ADXL345_INACTIVITY)){
-    Serial.println("*** INACTIVITY ***");
-     //add code here to do when inactivity is sensed
-  }
-  
   // Activity
   if(adxl.triggered(interrupts, ADXL345_ACTIVITY)){
-    Serial.println("*** ACTIVITY ***"); 
+    //Serial.println("*** ACTIVITY ***"); 
      //add code here to do when activity is sensed
   }
   
@@ -145,99 +190,180 @@ void ADXL_ISR() {
 } 
 
 
-void loop(){
+//////////////////////
+//   MAIN LOOP 
+//////////////////////
+void loop() {
+
+  /** Read acceleration */ 
   int x,y,z;
   String seat = DEFAULT_SEAT;
   adxl.readAccel(&x, &y, &z);
   ADXL_ISR();
-
-
-
+  
   //Serial.println(digitalRead(2));
-  String a = String(k());
-  String b = String(m());
+
+  /** Calculate Timestamp */
   time_t rawtime;
   struct tm * timeinfo;
-
   time ( &rawtime );
   timeinfo = localtime ( &rawtime );
   char* local_time = asctime (timeinfo);
 
-  int seatbelt = readButton(buttonPin);
+   time_t seconds;
+   seconds = time(NULL);
+
+
+
+  /** Check if button is pressed */
+  int seatbelt = digitalRead(buttonPin);
+
+  if (seatbelt == LOW) {
+    if (flag == 0) {
+      digitalWrite(ledPin, HIGH);
+      flag = 1;
+    } else if (flag == 1) {
+      digitalWrite(ledPin, LOW);
+      flag = 0;
+    }
+  }
+
+  ////////////////////// POST REQUEST STRINGS //////////////////////
+
+  String postMessage  = "POST /api/postSensor HTTP/1.1";
+  String hostMessage  = "Host: http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com";
+  //hostMessage.concat(Ethernet.localIP());
+  //hostMessage.concat(": ");
+  //hostMessage.concat(port);
+  String contentType  = "Content-Type: application/x-www-form-urlencoded; charset=UTF-8";
+  String userAgent    = "User-Agent: Arduino/1.0";
+  String closeConnect = "Connection: keep-alive";
+  String contentLen   = "Content-Length: ";
+
+
   
+  ////////////////////// SEATBELT POST REQUEST //////////////////////
   if (seatbelt != currentButton) {
     currentButton = seatbelt;
-    if (client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/",port)) {
+
+
+    if (client.connect(AWS_URL,port)) {
+        ///////////////// Build the Data //////////////////
         Serial.println("posting...");
         String data = "seat=";
         data.concat(DEFAULT_SEAT);
         data.concat("&sensor=");
-        
+        data.concat("buckled");
+        data.concat("&value=");
         if (analogRead(buttonPin) == 1) {
-          data.concat("buckled");
-          data.concat("&value=");
-          data.concat(true);
+          data.concat("true");
         } else {
-          data.concat("unbuckled");
-          data.concat("&value=");
-          data.concat(false);
+          data.concat("false");
         }
+        Serial.println(data);
         data.concat("&timestamp=");
-        data.concat(local_time);
-        client.println("POST /open/peripherals HTTP/1.1");
-        client.println("Host:" + Ethernet.localIP());
-        client.println("Content-Type: application/x-www-form-urlencoded");
-        client.println("User-Agent: Arduino/1.0");
-        client.println("Connection:close");
-        client.print("Content-Length:");
+        data.concat(DEFAULT_TIME);
+
+        ////////////////// Send to Client //////////////////
+        client.println(postMessage);
+        client.println(hostMessage);
+        client.println(contentType);
+        client.println(userAgent);
+        client.println(closeConnect);
+        client.print(contentLen);
         client.println(data.length());
         client.println();
         client.println(data);
         
         client.flush();
         client.stop();
+
+        ////////////////// debug messages //////////////////
+        //if (DEBUG == 1) {
+          Serial.println(postMessage);
+          Serial.println(hostMessage);
+          Serial.println(contentType);
+          Serial.println(userAgent);
+          Serial.println(closeConnect);
+          Serial.print(contentLen);
+          Serial.println(data.length());
+          Serial.println();
+          Serial.println(data);
+          if (finder.find((char*)"200 OK")) {
+            Serial.println("send success.");
+          }
+          if (finder.find((char*)"500")) {
+            Serial.println("Error 500");
+          }
+        //}
+    } else {
+      Serial.println("unable to connect");
     }
   }
   
-  double acceleration = magnitude(x,y,z);
 
+
+  ////////////////////// ACCELEROMETER POST REQUEST //////////////////////
+  double acceleration = magnitude(x,y,z);
   if (acceleration > ACCELTHRESHOLD) {
-    if (client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/",port)) {
+    if (client.connect(AWS_URL,port)) {
+      if (client.available()) {
+        char c = client.read();
+          Serial.print(c);
+      }
+      
+        Serial.println();
         Serial.println("posting...");
+        Serial.println();
+        String testString = "seat=1a&sensor=accelerometer&timestamp=0.000&acceleration=56.00";
+        ////////////////// Build the Data //////////////////
         String data = "seat=";
         data.concat(DEFAULT_SEAT);
-        data.concat("&sensor=");
-        
-        if (analogRead(buttonPin) == 1) {
-          data.concat("buckled");
-          data.concat("&value=");
-          data.concat(true);
-        } else {
-          data.concat("unbuckled");
-          data.concat("&value=");
-          data.concat(false);
-        }
+        data.concat("&sensor=accelerometer");
         data.concat("&timestamp=");
-        data.concat(local_time);
-        
+        data.concat(DEFAULT_TIME);
         data.concat("&acceleration=");
-   
-        Serial.println(acceleration);
         data.concat(acceleration);
-        client.println("POST /open/peripherals HTTP/1.1");
-        client.println("Host:" + Ethernet.localIP());
-        client.println("Content-Type: application/x-www-form-urlencoded");
-        client.println("User-Agent: Arduino/1.0");
-        client.println("Connection:close");
-        client.print("Content-Length:");
-        client.println(data.length());
+
+        ////////////////// Send to Client //////////////////
+        client.println(postMessage);
+        client.println(hostMessage);
+        client.println(contentType);
+        client.println(userAgent);
+        client.println(closeConnect);
+        client.print(contentLen);
+        //client.println(data.length());
+        client.println(testString.length());
         client.println();
-        client.println(data);
-        
+        //client.println(data);
+        client.println(testString);
         client.flush();
         client.stop();
+
+        //if (DEBUG == 1) {
+          Serial.println(acceleration);
+          Serial.println(postMessage);
+          Serial.println(hostMessage);
+          Serial.println(contentType);
+          Serial.println(userAgent);
+          Serial.println(closeConnect);
+          Serial.print(contentLen);
+          Serial.println(data.length());
+          Serial.println();
+          Serial.println(data);
+          if (finder.find((char*)"200 OK")) {
+            Serial.println("send success.");
+          }
+          if (finder.find((char*)"500")) {
+            Serial.println("Error 500");
+          }
+        //}
+    } else {
+      Serial.println("unable to connect");
     }
   } 
+
+  flushSerial();
 
   delay(50); // WAIT 50ms BEFORE SENDING AGAIN
 }
