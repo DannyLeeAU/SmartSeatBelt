@@ -40,6 +40,7 @@ class SeatHistoryCell: UITableViewCell {
     let accelerometerLabel: UILabel = {
         $0.textAlignment = .center
         $0.numberOfLines = 1
+        $0.backgroundColor = UIColor(hexString: "DBEBF6")
         return $0
     }(UILabel())
     
