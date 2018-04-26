@@ -61,7 +61,11 @@ int statusCode = 0;
 TextFinder finder(Serial);
 
 /**
- * Setup method 
+ * This function does the following:
+ *    -> Establishes a connection to the internet and the client database
+ *    -> Sets the thresholds for the ADXL accelerometer 
+ *    -> Initalizes the button and LED 
+ *    -> Starts the sensor and button
  */
 void setup() {
   Serial.begin(9600);
@@ -73,7 +77,7 @@ void setup() {
   delay(10000); // GIVE THE SENSOR SOME TIME TO START
   Serial.println("Ready");
 
-  client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/",80);
+  client.connect(AWS_URL,80);
   if (client.connected()) {
     Serial.println("connected");
     //client.println("GET /search?q=arduino HTTP/1.0");
@@ -136,9 +140,7 @@ int readButton(int pin) {
 
 
 /**
- * @parm x 
- * @parm y 
- * @parm z
+ * @ return the magnitude of acceleration 
  */
 double magnitude(int x, int y, int z) {
      double s;
@@ -256,19 +258,16 @@ void loop() {
         data = data + DEFAULT_SEAT;
         //data.concat("&sensor=");
         data = data + "&sensor=";
-        //data.concat("buckled");
         data = data + "buckled";
-        //data.concat("&value=");
         data = data + ("&value=");
         if (analogRead(buttonPin) == 1) {
-          //data.concat("true");
           data = data + "true";
         } else {
-          //data.concat("false");
           data = data + "false";
         }
+        
         data = data + "&timestamp=";
-        data = data + (DEFAULT_TIME);
+        data = data + String(DEFAULT_TIME);
         Serial.println(data);
 
         ////////////////// Send to Client //////////////////
@@ -287,21 +286,22 @@ void loop() {
 
         ////////////////// debug messages //////////////////
         //if (DEBUG == 1) {
-          Serial.println(postMessage);
-          Serial.println(hostMessage);
-          Serial.println(contentType);
-          Serial.println(userAgent);
-          Serial.println(closeConnect);
-          Serial.print(contentLen);
-          Serial.println(data.length());
-          Serial.println();
-          Serial.println(data);
-          if (finder.find((char*)"200 OK")) {
-            Serial.println("send success.");
-          }
-          if (finder.find((char*)"500")) {
-            Serial.println("Error 500");
-          }
+        Serial.println(postMessage);
+        Serial.println(hostMessage);
+        Serial.println(contentType);
+        Serial.println(userAgent);
+        Serial.println(closeConnect);
+        Serial.print(contentLen);
+        Serial.println(data.length());
+        Serial.println();
+        Serial.println(data);
+        
+        if (finder.find((char*)"200 OK")) {
+          Serial.println("send success.");
+        }
+        if (finder.find((char*)"500")) {
+          Serial.println("Error 500");
+        }
         //}
     } else {
       Serial.println("unable to connect");
@@ -315,10 +315,6 @@ void loop() {
   if (acceleration > ACCELTHRESHOLD && (acceleration != previousAccel)) {
     previousAccel = acceleration;
     if (client.connect(AWS_URL,port)) {
-      if (client.available()) {
-        char c = client.read();
-          Serial.print(c);
-      }
       
         Serial.println();
         Serial.println("posting...");
@@ -329,9 +325,10 @@ void loop() {
         accelData = accelData + DEFAULT_SEAT;
         accelData = accelData + "&sensor=accelerometer";
         accelData = accelData + "&timestamp=";
-        accelData = accelData + DEFAULT_TIME;
+        accelData = accelData + String(DEFAULT_TIME);
         accelData = accelData + "&acceleration=";
-        accelData = accelData + acceleration;
+        accelData = accelData + String(acceleration);
+        Serial.println(accelData);
 
         ////////////////// Send to Client //////////////////
         client.println(postMessage);
@@ -341,7 +338,7 @@ void loop() {
         client.println(closeConnect);
         client.print(contentLen);
         //client.println(data.length());
-        client.println(testString.length());
+        client.println(String(testString.length()));
         client.println();
         client.println(accelData);
         //client.println(testString);
@@ -373,7 +370,7 @@ void loop() {
 
   flushSerial();
 
-  delay(50); // WAIT 50ms BEFORE SENDING AGAIN
+  delay(100); // WAIT 100MS BEFORE CHECKING AGAIN
 }
 
 
