@@ -162,7 +162,7 @@ class SeatHistoryTable: UITableViewController {
                 if code == 200 {
                     print("Successful Download")
                     
-                    var jsonArray = JSON(response.value).jsonArray ?? []
+                    let jsonArray = JSON(response.value).jsonArray ?? []
                     //var size = jsonArray.
                    // jsonArray = jsonArray.reversed()
                     
