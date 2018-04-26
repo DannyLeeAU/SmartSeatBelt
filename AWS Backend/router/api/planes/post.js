@@ -4,14 +4,14 @@ const DatabaseFactory = require('../../../factories/database');
 
 
 function createPlaneUpdate(req) {
-    let updatePlane = { seatbeltLightOn: req.body.seatbeltLightOn };
+    let updatePlane = { seatbeltLightOn: Boolean(req.body.seatbeltLightOn) };
     return {$set: updatePlane};
 }
 
 function emitSocketEvents(req) {
     let io = req.app.get('socketio');
     if (req.body.hasOwnProperty('seatbeltLightOn')) {
-        io.emit('seatbeltlight update', req.body.seatbeltLightOn);
+        io.emit('seatbeltlight update', Boolean(req.body.seatbeltLightOn));
     }
 }
 

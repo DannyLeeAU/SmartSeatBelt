@@ -163,6 +163,8 @@ class SeatHistoryTable: UITableViewController {
                     print("Successful Download")
                     
                     let jsonArray = JSON(response.value).jsonArray ?? []
+                    //var size = jsonArray.
+                   // jsonArray = jsonArray.reversed()
                     
                     //default values for sensor object
                     var object = SensorObject(fastened: false, inProximity: false, timeStamp: Date(), accelerometer: 0.0)
@@ -187,6 +189,9 @@ class SeatHistoryTable: UITableViewController {
                         
                         self.sensorObjectsArray.append(object)
                     }
+                    
+                    //reverse the array to display the latest time first
+                    self.sensorObjectsArray = self.sensorObjectsArray.reversed()
                     
                     // if the seat dictionary doesn't have any values after download has completed, show an error
                     if self.sensorObjectsArray.count == 0 {
@@ -253,10 +258,10 @@ class SeatHistoryTable: UITableViewController {
         let dateFormatter = DateFormatter()
         //dateFormatter.dateFormat = "MM-dd-yyyy\nhh:mm:ss a"
         dateFormatter.dateFormat = "hh:mm:ss a"
-        let returnString = dateFormatter.string(from: timestamp)
+        let formattedTime = dateFormatter.string(from: timestamp)
         
         // set the value of the time label
-        cell.timeLabel.text = returnString
+        cell.timeLabel.text = formattedTime
         
         // if the seat belt is fastened, put a checkmark. If not, leave empty.
         if seatBeltFastened {

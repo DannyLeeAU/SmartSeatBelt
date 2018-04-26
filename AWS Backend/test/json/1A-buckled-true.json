@@ -1,6 +1,5 @@
 {
   "seat":"1A",
   "sensor":"buckled",
-  "value":true,
-  "time":0
+  "value":"true"
 }
