@@ -85,8 +85,6 @@ class SeatHistoryCell: UITableViewCell {
             make.right.equalToSuperview()
             
         }
-        
-        
     }
 }
 
