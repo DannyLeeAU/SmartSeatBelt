@@ -3,9 +3,25 @@
 const DatabaseFactory = require('../../../factories/database');
 
 
+function normalizeSensorValue(req) {
+    let value;
+    switch (req.body.sensor) {
+        case 'buckled':
+        case 'proximity':
+            value = Boolean(req.body.value);
+            break;
+        case 'accelerometer':
+            value = Number(req.body.value);
+            break;
+        default:
+            value = req.body.value;
+    }
+    return value;
+}
+
 function createSeatUpdate(req) {
     let seatUpdate = {};
-    seatUpdate[req.body.sensor] = req.body.value;
+    seatUpdate[req.body.sensor] = normalizeSensorValue(req);
     return {$set: seatUpdate};
 }
 
@@ -13,8 +29,8 @@ function createSensorDataMap(req) {
     return {
         seat: req.body.seat,
         sensor: req.body.sensor,
-        value: req.body.value,
-        time: req.body.timestamp
+        value: normalizeSensorValue(req),
+        time: Date.now() / 1000
     };
 }
 
