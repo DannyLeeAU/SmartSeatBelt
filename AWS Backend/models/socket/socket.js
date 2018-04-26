@@ -2,10 +2,11 @@
 
 const SocketIO = require('socket.io');
 const debug = require('debug')('smartseatbelt:socket');
-const database = require('../database');
+const DatabaseFactory = require('../../factories/database');
 
 
 async function downloadSensorData() {
+    let database = DatabaseFactory.getDatabase();
     try {
         await database.connect();
         return await database.getCollectionArray('Seats');
@@ -17,6 +18,7 @@ async function downloadSensorData() {
 }
 
 async function downloadPlaneData() {
+    let database = DatabaseFactory.getDatabase();
     try {
         await database.connect();
         return await database.getDocumentById('Planes', 1);
