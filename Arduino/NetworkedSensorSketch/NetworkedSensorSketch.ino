@@ -20,11 +20,11 @@
 #include <Process.h>
 #include <TextFinder.h>
 
-//////////////////////
+
 #define TIMEOUT 2000
 #define DEBUG 1
 
-//////////////////////
+
 // NETWORKING
 //////////////////////
 byte mac[] = { 0x00, 0xAB, 0xBC, 0xCC, 0xDE, 0x01 }; // RESERVED MAC ADDRESS
@@ -32,7 +32,7 @@ byte ip[] = { 192, 168, 1, 227 };
 char serverAddress[] = "52.43.115.120";
 EthernetClient client;
 
-//////////////////////
+
 // Accelerometer
 //////////////////////
 ADXL345 adxl = ADXL345();             // USE FOR I2C COMMUNICATION
@@ -49,7 +49,7 @@ double ACCELTHRESHOLD = 0;
 double previousAccel = 0;
 
 
-//////////////////////
+
 // Button Constants 
 //////////////////////
 const int buttonPin = 8;
@@ -60,13 +60,7 @@ String response;
 int statusCode = 0;
 TextFinder finder(Serial);
 
-/**
- * This function does the following:
- *    -> Establishes a connection to the internet and the client database
- *    -> Sets the thresholds for the ADXL accelerometer 
- *    -> Initalizes the button and LED 
- *    -> Starts the sensor and button
- */
+
 void setup() {
   Serial.begin(9600);
   pinMode(3, INPUT);      // sets the digital pin as output
@@ -106,18 +100,16 @@ void setup() {
   adxl.setFreeFallThreshold(7);       // (5 - 9) recommended - 62.5mg per increment
   adxl.setFreeFallDuration(30);       // (20 - 70) recommended - 5ms per increment
 
-  //////////////////////
+  
   //   ADXL Flags 
-  //////////////////////
   adxl.InactivityINT(1);
   adxl.ActivityINT(1);
   adxl.FreeFallINT(1);
   adxl.doubleTapINT(1);
   adxl.singleTapINT(1);
 
-  //////////////////////
+  
   // Button Stuff 
-  //////////////////////
   pinMode(ledPin, OUTPUT);
   pinMode(buttonPin, INPUT_PULLUP);
 
@@ -139,9 +131,6 @@ int readButton(int pin) {
 
 
 
-/**
- * @ return the magnitude of acceleration 
- */
 double magnitude(int x, int y, int z) {
      double s;
      s=sqrt((x*x)+(y*y)+(z*z));
@@ -231,8 +220,7 @@ void loop() {
     }
   }
 
-  ////////////////////// POST REQUEST STRINGS //////////////////////
-
+  ////////////////////// POST REQUEST STRINGS 
   String postMessage  = "POST /api/postSensor HTTP/1.1";
   String hostMessage  = "Host: http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com";
   //hostMessage.concat(Ethernet.localIP());
@@ -245,13 +233,13 @@ void loop() {
 
 
   
-  ////////////////////// SEATBELT POST REQUEST //////////////////////
+  ////////////////////// SEATBELT POST REQUEST 
   if (seatbelt != currentButton) {
     currentButton = seatbelt;
 
 
     if (client.connect(AWS_URL,port)) {
-        ///////////////// Build the Data //////////////////
+        ///////////////// Build the Data 
         Serial.println("posting...");
         String data = "seat=";
         //data.concat(DEFAULT_SEAT);
@@ -270,7 +258,7 @@ void loop() {
         data = data + String(DEFAULT_TIME);
         Serial.println(data);
 
-        ////////////////// Send to Client //////////////////
+        ////////////////// Send to Client 
         client.println(postMessage);
         client.println(hostMessage);
         client.println(contentType);
@@ -283,18 +271,6 @@ void loop() {
         
         client.flush();
         client.stop();
-
-        ////////////////// debug messages //////////////////
-        //if (DEBUG == 1) {
-        Serial.println(postMessage);
-        Serial.println(hostMessage);
-        Serial.println(contentType);
-        Serial.println(userAgent);
-        Serial.println(closeConnect);
-        Serial.print(contentLen);
-        Serial.println(data.length());
-        Serial.println();
-        Serial.println(data);
         
         if (finder.find((char*)"200 OK")) {
           Serial.println("send success.");
@@ -310,7 +286,7 @@ void loop() {
   
 
 
-  ////////////////////// ACCELEROMETER POST REQUEST //////////////////////
+  ////////////////////// ACCELEROMETER POST REQUEST 
   double acceleration = magnitude(x,y,z);
   if (acceleration > ACCELTHRESHOLD && (acceleration != previousAccel)) {
     previousAccel = acceleration;
@@ -320,17 +296,17 @@ void loop() {
         Serial.println("posting...");
         Serial.println();
         String testString = "seat=1a&sensor=accelerometer&timestamp=0.000&acceleration=56.00";
-        ////////////////// Build the Data //////////////////
+        ////////////////// Build the Data 
         String accelData = "seat=";
+        Serial.println(accelData);
         accelData = accelData + DEFAULT_SEAT;
         accelData = accelData + "&sensor=accelerometer";
         accelData = accelData + "&timestamp=";
         accelData = accelData + String(DEFAULT_TIME);
         accelData = accelData + "&acceleration=";
         accelData = accelData + String(acceleration);
-        Serial.println(accelData);
-
-        ////////////////// Send to Client //////////////////
+        
+        ////////////////// Send to Client 
         client.println(postMessage);
         client.println(hostMessage);
         client.println(contentType);
@@ -345,32 +321,20 @@ void loop() {
         client.flush();
         client.stop();
 
-        //if (DEBUG == 1) {
-          Serial.println(acceleration);
-          Serial.println(postMessage);
-          Serial.println(hostMessage);
-          Serial.println(contentType);
-          Serial.println(userAgent);
-          Serial.println(closeConnect);
-          Serial.print(contentLen);
-          Serial.println(accelData.length());
-          Serial.println();
-          Serial.println(accelData);
-          if (finder.find((char*)"200 OK")) {
+        if (finder.find((char*)"200 OK")) {
             Serial.println("send success.");
-          }
-          if (finder.find((char*)"500")) {
-            Serial.println("Error 500");
-          }
-        //}
+        }
+        if (finder.find((char*)"500")) {
+          Serial.println("Error 500");
+        }
     } else {
       Serial.println("unable to connect");
     }
   } 
 
-  flushSerial();
 
   delay(100); // WAIT 100MS BEFORE CHECKING AGAIN
 }
+
 
 
