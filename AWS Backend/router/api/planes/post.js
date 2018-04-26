@@ -1,5 +1,6 @@
 "use strict";
-const database = require('../../../models/database');
+
+const DatabaseFactory = require('../../../factories/database');
 
 
 function createPlaneUpdate(req) {
@@ -16,6 +17,7 @@ function emitSocketEvents(req) {
 
 
 async function postPlane(req, res, next) {
+    let database = DatabaseFactory.getDatabase();
     let update = createPlaneUpdate(req);
     try {
         await database.connect();
@@ -25,7 +27,7 @@ async function postPlane(req, res, next) {
     } catch (err) {
         res.send(err);
     } finally {
-        database.close();
+        await database.close();
     }
 }
 

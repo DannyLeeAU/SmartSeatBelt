@@ -1,9 +1,10 @@
 "use strict";
 
-const database = require('../../../models/database');
+const DatabaseFactory = require('../../../factories/database');
 
 
 async function getOneSensorHistory(req, res, next) {
+    let database = DatabaseFactory.getDatabase();
     try {
         await database.connect();
         let result = await database.getDocumentsByValue('Sensors', 'seat', req.params.id, {time: 1});

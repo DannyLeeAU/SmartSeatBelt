@@ -1,6 +1,6 @@
 "use strict";
 
-const database = require('../../models/database/index');
+const DatabaseFactory = require('../../factories/database');
 
 
 function seatNames() {
@@ -49,6 +49,7 @@ function createSensorArray() {
 
 
 async function populateSeatData(req, res, next) {
+    let database = DatabaseFactory.getDatabase();
     let seats = createSeatArray();
     let sensors = createSensorArray();
     try {

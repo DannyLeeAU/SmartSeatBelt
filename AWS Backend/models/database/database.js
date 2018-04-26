@@ -12,24 +12,20 @@ class Database {
         this.uri = uri;
     }
     async connect() {
-        if (this.client) { return; }
         try {
             this.client = await MongoClient.connect(this.uri);
             this.db = this.client.db('test');
         } catch (err) {
-            console.log("Error connecting to database: " + err.message);
+            console.error("Failed to connect to database: " + err.message);
             throw(err);
         }
     }
     async close() {
-        if (this.client) {
+        if (this.client && this.client.isConnected()) {
             try {
-                 let closePromise = this.client.close();
-                 this.client = null;
-                 this.db = null;
-                 return closePromise;
+                 return this.client.close();
             } catch(err) {
-                console.log("Failed to close the database: " + err.message);
+                console.error("Failed to close database: " + err.message);
                 throw(err);
             }
         }
@@ -48,7 +44,7 @@ class Database {
             let collection = this.db.collection(coll);
             return await collection.drop();
         } catch (err) {
-            console.log('Failed to drop collection: ' + err.message);
+            console.error('Failed to drop collection: ' + err.message);
             throw(err);
         }
     }
@@ -58,7 +54,7 @@ class Database {
             let cursor = collection.find();
             return await cursor.toArray();
         } catch (err) {
-            console.log('Failed to get collection array: ' + err.message);
+            console.error('Failed to get collection array: ' + err.message);
             throw(err);
         }
     }
@@ -67,7 +63,7 @@ class Database {
             let collection = this.db.collection(coll);
             return await collection.findOne({_id});
         } catch (err) {
-            console.log('Failed to get document: ' + err.message);
+            console.error('Failed to get document: ' + err.message);
         }
     }
     async getDocumentsByValue(coll, key, value, sort=null) {
@@ -81,7 +77,7 @@ class Database {
             }
             return await cursor.toArray();
         } catch (err) {
-            console.log('Failed to get documents: ' + err.message);
+            console.error('Failed to get documents: ' + err.message);
             throw(err);
         }
     }
@@ -90,7 +86,7 @@ class Database {
             let collection = this.db.collection(coll);
             return await collection.insertOne(document, {w: "majority"});
         } catch (err) {
-            console.log("Insert failed: " + err.message);
+            console.error("Insert failed: " + err.message);
             throw(err);
         }
     }
@@ -99,7 +95,7 @@ class Database {
             let collection = this.db.collection(coll);
             return await collection.insertMany(documents, {w: "majority"});
         } catch (err) {
-            console.log("Insert failed: " + err.message);
+            console.error("Insert failed: " + err.message);
             throw(err);
         }
     }
@@ -108,7 +104,7 @@ class Database {
             let collection = this.db.collection(coll);
             return await collection.updateOne({_id: id}, update);
         } catch (err) {
-            console.log("Update failed: " + err.message);
+            console.error("Update failed: " + err.message);
             throw(err);
         }
     }
