@@ -1,6 +1,6 @@
 "use strict";
-const Database = require('../../models/database/database');
-const config = require('../../config/index');
+const Database = require('../models/database');
+const config = require('../config/index');
 
 
 /*

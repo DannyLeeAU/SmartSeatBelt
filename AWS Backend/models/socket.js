@@ -2,7 +2,7 @@
 
 const SocketIO = require('socket.io');
 const debug = require('debug')('smartseatbelt:socket');
-const DatabaseFactory = require('../../factories/database');
+const DatabaseFactory = require('../factories/database');
 
 
 async function downloadSensorData() {
