@@ -28,7 +28,7 @@
 // NETWORKING
 //////////////////////
 byte mac[] = { 0x00, 0xAB, 0xBC, 0xCC, 0xDE, 0x01 }; // RESERVED MAC ADDRESS
-byte ip[] = { 192, 168, 0, 177 };
+byte ip[] = { 192, 168, 1, 227 };
 char serverAddress[] = "52.43.115.120";
 EthernetClient client;
 
@@ -45,7 +45,8 @@ int port = 80;
 unsigned long currentMillis = 0;
 long interval = 500; // READING INTERVAL
 int i=0;
-double ACCELTHRESHOLD = 40;
+double ACCELTHRESHOLD = 0;
+double previousAccel = 0;
 
 
 //////////////////////
@@ -72,11 +73,11 @@ void setup() {
   delay(10000); // GIVE THE SENSOR SOME TIME TO START
   Serial.println("Ready");
 
-  client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/", 80);
+  client.connect("http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/",80);
   if (client.connected()) {
     Serial.println("connected");
-    client.println("GET /search?q=arduino HTTP/1.0");
-    client.println();
+    //client.println("GET /search?q=arduino HTTP/1.0");
+    //client.println();
   } else {
     Serial.println("connection failed");
   }
@@ -233,11 +234,11 @@ void loop() {
   String postMessage  = "POST /api/postSensor HTTP/1.1";
   String hostMessage  = "Host: http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com";
   //hostMessage.concat(Ethernet.localIP());
-  //hostMessage.concat(": ");
-  //hostMessage.concat(port);
+  hostMessage.concat(": ");
+  hostMessage.concat(port);
   String contentType  = "Content-Type: application/x-www-form-urlencoded; charset=UTF-8";
   String userAgent    = "User-Agent: Arduino/1.0";
-  String closeConnect = "Connection: keep-alive";
+  String closeConnect = "Connection: close";
   String contentLen   = "Content-Length: ";
 
 
@@ -251,18 +252,24 @@ void loop() {
         ///////////////// Build the Data //////////////////
         Serial.println("posting...");
         String data = "seat=";
-        data.concat(DEFAULT_SEAT);
-        data.concat("&sensor=");
-        data.concat("buckled");
-        data.concat("&value=");
+        //data.concat(DEFAULT_SEAT);
+        data = data + DEFAULT_SEAT;
+        //data.concat("&sensor=");
+        data = data + "&sensor=";
+        //data.concat("buckled");
+        data = data + "buckled";
+        //data.concat("&value=");
+        data = data + ("&value=");
         if (analogRead(buttonPin) == 1) {
-          data.concat("true");
+          //data.concat("true");
+          data = data + "true";
         } else {
-          data.concat("false");
+          //data.concat("false");
+          data = data + "false";
         }
+        data = data + "&timestamp=";
+        data = data + (DEFAULT_TIME);
         Serial.println(data);
-        data.concat("&timestamp=");
-        data.concat(DEFAULT_TIME);
 
         ////////////////// Send to Client //////////////////
         client.println(postMessage);
@@ -305,7 +312,8 @@ void loop() {
 
   ////////////////////// ACCELEROMETER POST REQUEST //////////////////////
   double acceleration = magnitude(x,y,z);
-  if (acceleration > ACCELTHRESHOLD) {
+  if (acceleration > ACCELTHRESHOLD && (acceleration != previousAccel)) {
+    previousAccel = acceleration;
     if (client.connect(AWS_URL,port)) {
       if (client.available()) {
         char c = client.read();
@@ -317,13 +325,13 @@ void loop() {
         Serial.println();
         String testString = "seat=1a&sensor=accelerometer&timestamp=0.000&acceleration=56.00";
         ////////////////// Build the Data //////////////////
-        String data = "seat=";
-        data.concat(DEFAULT_SEAT);
-        data.concat("&sensor=accelerometer");
-        data.concat("&timestamp=");
-        data.concat(DEFAULT_TIME);
-        data.concat("&acceleration=");
-        data.concat(acceleration);
+        String accelData = "seat=";
+        accelData = accelData + DEFAULT_SEAT;
+        accelData = accelData + "&sensor=accelerometer";
+        accelData = accelData + "&timestamp=";
+        accelData = accelData + DEFAULT_TIME;
+        accelData = accelData + "&acceleration=";
+        accelData = accelData + acceleration;
 
         ////////////////// Send to Client //////////////////
         client.println(postMessage);
@@ -335,8 +343,8 @@ void loop() {
         //client.println(data.length());
         client.println(testString.length());
         client.println();
-        //client.println(data);
-        client.println(testString);
+        client.println(accelData);
+        //client.println(testString);
         client.flush();
         client.stop();
 
@@ -348,9 +356,9 @@ void loop() {
           Serial.println(userAgent);
           Serial.println(closeConnect);
           Serial.print(contentLen);
-          Serial.println(data.length());
+          Serial.println(accelData.length());
           Serial.println();
-          Serial.println(data);
+          Serial.println(accelData);
           if (finder.find((char*)"200 OK")) {
             Serial.println("send success.");
           }
