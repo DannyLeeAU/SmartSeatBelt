@@ -37,16 +37,10 @@ class SeatHistoryCell: UITableViewCell {
         return $0
     }(UILabel())
     
-    //let testLabel: UILabel = {
-      //  $0.textAlignment = .center
-     //   $0.numberOfLines = 1
-    //    $0.backgroundColor = UIColor(hexString: "DBEBF6")
-   //     return $0
-  //  }(UILabel())
-    
     let accelerometerLabel: UILabel = {
         $0.textAlignment = .center
         $0.numberOfLines = 1
+        $0.backgroundColor = UIColor(hexString: "DBEBF6")
         return $0
     }(UILabel())
     
@@ -58,6 +52,7 @@ class SeatHistoryCell: UITableViewCell {
         timeLabel.text = nil
         fastenedLabel.text = nil
         proximityLabel.text = nil
+        accelerometerLabel.text = nil
     }
     
     func setupCell() {
@@ -91,8 +86,6 @@ class SeatHistoryCell: UITableViewCell {
             make.right.equalToSuperview()
             
         }
-        
-        
     }
 }
 

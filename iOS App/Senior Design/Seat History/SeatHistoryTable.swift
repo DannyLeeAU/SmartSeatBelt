@@ -23,6 +23,7 @@ fileprivate let reuseIdentifier = "seatHistoryCell"
 class SeatHistoryTable: UITableViewController {
     // The seat number of which we will show the history of. This will be used as the nav title to informt the user.
     var seatNumber = ""
+    
     // The array of sensorObjects for the specific seat.
     // Once the download is complete and the dictionary is populated, the table will reload with all information and dismiss the loading sign.
     var sensorObjectsArray = [SensorObject]() {
@@ -31,6 +32,7 @@ class SeatHistoryTable: UITableViewController {
         }
     }
     
+    //Initializes the seat number to the seat the user requested
     init(seatNumberIn: String) {
         seatNumber = seatNumberIn
         super.init(nibName: nil, bundle: nil)
@@ -144,92 +146,58 @@ class SeatHistoryTable: UITableViewController {
         tableView.tableHeaderView = headerView
     }
     
-    // Download all data for seats from mongo db using AWS elastic beanstalk
+    // Download all data for seats from MongoDB using AWS elastic beanstalk
     func downloadData() {
         // create a url object from the given string
-        let url = URL(string: "http://smartseatbeltsystem-env-1.ceppptmr2f.us-west-2.elasticbeanstalk.com/API/getSeats")
+        let url = URL(string: "api/sensors/" + seatNumber, relativeTo: BASEURL)
         
         // if creating the url passed
         if url != nil {
             // make the API call as a GET request
             Alamofire.request(url!, method: HTTPMethod.get, parameters: nil).responseJSON { (response) in
                 // Get the code of the response
-                // Jist of what you need to know:
-                //      200 = Good
-                //      400 = Bad
                 let code = response.response?.statusCode
-                let error = response.error
                 
                 // If the API call was successful, parse through the JSON for each seat.
                 if code == 200 {
                     print("Successful Download")
                     
-                    /** Get the jsonDictionary of the form
-                     {
-                     "1a": [
-                     {
-                     "fastened":true,
-                     "inProximity":false,
-                     "timeStamp":10932345345
-                     },
-                     {
-                     "fastened":true,
-                     "inProximity":false,
-                     "timeStamp":10932345345
-                     }
-                     ]
-                     }
-                     **/
-                    let jsonValue = JSON(response.value).jsonDictionary ?? [:]
+                    let jsonArray = JSON(response.value).jsonArray ?? []
+                    //var size = jsonArray.
+                   // jsonArray = jsonArray.reversed()
+                    
+                    //default values for sensor object
+                    var object = SensorObject(fastened: false, inProximity: false, timeStamp: Date(), accelerometer: 0.0)
+                    
                     // for each key, value in that dictionary
-                    for (key, value) in jsonValue {
-                        // if the value is the seat number we are looking for
-                        if key == self.seatNumber {
-                            // preset the values
-                            var fastenedBool = true
-                            var inProximityBool = true
-                            var timeStamp = Date()
-                            var accelerometerNum = 0.0
-                            
-                            // get the value from that key which is an array. If something fails, set it to an empty array
-                            let array = value.jsonArray ?? []
-                            // for each object in that array
-                            for dict in array {
-                                // for each key value in that object as a jsonDictionary
-                                for (key2, value2) in dict.jsonDictionary! {
-                                    // get the value for seatbelt fastened
-                                    if key2 == "isBuckled" {
-                                        fastenedBool = value2.boolValue
-                                    }
-                                        // get the value for a person in proximity
-                                    else if key2 == "inProximity" {
-                                        inProximityBool = value2.boolValue
-                                    }
-                                        // get the value for thet timestamp
-                                    else if key2 == "Timestamp" {
-                                        let epoch = value2.double ?? 0.0
-                                        timeStamp = Date(timeIntervalSince1970: epoch)
-                                    }
-                                    // get the value for the accelerometer
-                                    //                                    else if key2 = ""
-                                }
-                                // after all of the values are set, create a sensor object and append to array
-                                let object = SensorObject(fastened: fastenedBool, inProximity: inProximityBool, timeStamp: timeStamp, accelerometer: accelerometerNum)
-                                self.sensorObjectsArray.append(object)
-                            }
-                            
+                    for document in jsonArray {
+            
+                        switch document["sensor"].stringValue {
+                        case "buckled":
+                            object.fastened = document["value"].boolValue
+                            object.accelerometer = 0.0
+                        case "proximity":
+                            object.inProximity = document["value"].boolValue
+                            object.accelerometer = 0.0
+                        case "accelerometer":
+                            object.accelerometer = document["value"].double ?? 0.0
+                        default:
+                            break
                         }
+                        let epoch = document["time"].double ?? 0.0
+                        object.timeStamp = Date(timeIntervalSince1970: epoch)
                         
+                        self.sensorObjectsArray.append(object)
                     }
+                    
+                    //reverse the array to display the latest time first
+                    self.sensorObjectsArray = self.sensorObjectsArray.reversed()
                     
                     // if the seat dictionary doesn't have any values after download has completed, show an error
                     if self.sensorObjectsArray.count == 0 {
                         self.presentDownloadError()
                         print("No seats were downloaded")
                     }
-                    
-                    // reverse the array so that the they show in order of time
-                    //                    self.sensorObjectsArray = self.sensorObjectsArray.reversed()
                 }
                     // If the API call was not successful, show download error
                 else {
@@ -290,10 +258,10 @@ class SeatHistoryTable: UITableViewController {
         let dateFormatter = DateFormatter()
         //dateFormatter.dateFormat = "MM-dd-yyyy\nhh:mm:ss a"
         dateFormatter.dateFormat = "hh:mm:ss a"
-        let returnString = dateFormatter.string(from: timestamp)
+        let formattedTime = dateFormatter.string(from: timestamp)
         
         // set the value of the time label
-        cell.timeLabel.text = returnString
+        cell.timeLabel.text = formattedTime
         
         // if the seat belt is fastened, put a checkmark. If not, leave empty.
         if seatBeltFastened {
@@ -305,9 +273,8 @@ class SeatHistoryTable: UITableViewController {
             cell.proximityLabel.text = "✔️"
         }
         
-        // set value of accelerometer data is found, put a (x, y, z). If not, leave empty.
-        cell.accelerometerLabel.text = ""
-        //fill in when data can be pulled from Mongodb
+        // set value of accelerometer data if found. If not, leave empty.
+        cell.accelerometerLabel.text = String(format:"%.1f", accelerometer)
         
         // don't allow the user to select the rows
         cell.selectionStyle = .none
@@ -317,6 +284,4 @@ class SeatHistoryTable: UITableViewController {
         
         return cell
     }
-    
 }
-
